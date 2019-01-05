@@ -1,0 +1,43 @@
+<?php
+/**
+ * @filesource   DTBL.php
+ * @created      04.01.2019
+ * @author       smiley <smiley@chillerlan.net>
+ * @copyright    2019 smiley
+ * @license      MIT
+ */
+
+namespace codemasher\WildstarDBExamples;
+
+use codemasher\WildstarDB\DTBLReader;
+use FilesystemIterator, RecursiveDirectoryIterator, RecursiveIteratorIterator;
+
+/** @var \chillerlan\Database\Database $db */
+$db = null;
+
+/** @var \Psr\Log\LoggerInterface $logger */
+$logger = null;
+
+require_once __DIR__.'/common.php';
+
+$reader   = new DTBLReader($logger);
+$iterator = new RecursiveDirectoryIterator(__DIR__.'/tbl', FilesystemIterator::SKIP_DOTS);
+
+foreach(new RecursiveIteratorIterator($iterator) as $finfo){
+
+	if($finfo->getExtension() !== 'tbl'){
+		$logger->notice($finfo->getFilename().' is probably not a DTBL');
+		continue;
+	}
+
+	try{
+		$reader->read($finfo->getRealPath());
+		$reader->toDB($db);
+
+		$logger->info('success: '.$finfo->getFilename());
+	}
+	catch(\Exception $e){
+		$logger->error($finfo->getFilename().': '.$e->getMessage());
+	}
+
+}
