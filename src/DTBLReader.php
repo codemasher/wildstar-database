@@ -168,9 +168,7 @@ class DTBLReader{
 
 		$this->init();
 
-		$offset = $this->header['EntryOffset'] + 0x60;
-
-		fseek($this->fh, $offset);
+		fseek($this->fh, $this->header['EntryOffset'] + 0x60);
 
 		for($i = 0; $i < $this->header['RecordCount']; $i++){
 			$data = fread($this->fh, $this->header['RecordSize']);
@@ -193,27 +191,7 @@ class DTBLReader{
 					case 20: // uint64
 						$v = unpack('Q', substr($data, $j, 8))[1]; $j += 8; break;
 					case 130: // string
-						{
-							$o    = unpack('L', substr($data, $j, 4))[1];
-							$p    = ftell($this->fh);
-							$skip = $o === 0;
-
-							fseek($this->fh, $offset + ($o > 0 ? $o : unpack('L', substr($data, $j + 4, 4))[1]));
-
-							$j += 8;
-							$v = '';
-
-							do{
-								$s = fread($this->fh, 2);
-
-								$v .= $s;
-							}
-							while($s !== "\x00\x00" && $s !== '');
-
-							$v = $this->decodeString($v);
-							fseek($this->fh, $p);
-							break;
-						}
+						$v = $this->readString($data, $j, $skip); $j += 8; break;
 
 					default: $v = null;
 				}
@@ -235,6 +213,34 @@ class DTBLReader{
 		}
 
 		return $this;
+	}
+
+	/**
+	 * @param string $data
+	 * @param int    $j
+	 * @param bool   $skip
+	 *
+	 * @return string
+	 */
+	protected function readString(string $data, int $j, bool &$skip):string{
+		$o    = unpack('L', substr($data, $j, 4))[1];
+		$p    = ftell($this->fh);
+		$skip = $o === 0;
+
+		fseek($this->fh, $this->header['EntryOffset'] + 0x60 + ($o > 0 ? $o : unpack('L', substr($data, $j + 4, 4))[1]));
+
+		$v = '';
+
+		do{
+			$s = fread($this->fh, 2);
+
+			$v .= $s;
+		}
+		while($s !== "\x00\x00" && $s !== '');
+
+		fseek($this->fh, $p);
+
+		return $this->decodeString($v);
 	}
 
 	/**
