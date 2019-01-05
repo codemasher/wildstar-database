@@ -124,14 +124,13 @@ class DTBLReader{
 
 		$this->header = unpack($this::FORMAT_HEADER, $header);
 
-		$this->logger->info('fields: '.$this->header['FieldCount'].', rows: '.$this->header['RecordCount']);
-
-
 		if($this->header['Signature'] !== "\x4c\x42\x54\x44"){ // LBTD
 			throw new WSDBException('invalid DTBL');
 		}
 
 		$this->name = $this->decodeString(fread($this->fh, $this->header['TableNameLength'] * 2));
+
+		$this->logger->info($this->name.', fields: '.$this->header['FieldCount'].', rows: '.$this->header['RecordCount']);
 
 		fseek($this->fh, $this->header['DescriptionOffset'] + 0x60);
 
