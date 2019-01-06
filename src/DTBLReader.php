@@ -15,114 +15,16 @@
 
 namespace codemasher\WildstarDB;
 
-use chillerlan\Database\Database;
-use Psr\Log\{LoggerAwareTrait, LoggerInterface, NullLogger};
+class DTBLReader extends ReaderAbstract{
 
-/**
- * @property string $dtbl
- * @property string $name
- * @property array  $header
- * @property array  $cols
- * @property array  $data
- */
-class DTBLReader{
-	use LoggerAwareTrait;
-
-	protected const FORMAT_HEADER = 'a4Signature/LVersion/QTableNameLength/QUnknown1/QRecordSize/QFieldCount/QDescriptionOffset/QRecordCount/QFullRecordSize/QEntryOffset/QNextId/QIDLookupOffset/QUnknown2';
-	protected const FORMAT_COLUMN = 'LNameLength/LUnknown1/QNameOffset/SDataType/SUnknown2/LUnknown3';
-
-	/**
-	 * @var string
-	 */
-	protected $dtbl = '';
-
-	/**
-	 * @var string
-	 */
-	protected $name = '';
-
-	/**
-	 * @var array
-	 */
-	protected $header = [];
-
-	/**
-	 * @var array
-	 */
-	protected $cols = [];
-
-	/**
-	 * @var array
-	 */
-	protected $data = [];
-
-	/**
-	 * @var resource
-	 */
-	private $fh;
-
-	/**
-	 * DTBLReader constructor.
-	 *
-	 * @param \Psr\Log\LoggerInterface|null $logger
-	 *
-	 * @throws \codemasher\WildstarDB\WSDBException
-	 */
-	public function __construct(LoggerInterface $logger = null){
-
-		if(PHP_INT_SIZE < 8){
-			throw new WSDBException('64-bit PHP required');
-		}
-
-		$this->setLogger($logger ?? new NullLogger);
-	}
+	protected $FORMAT_HEADER = 'a4Signature/LVersion/QTableNameLength/QUnknown1/QRecordSize/QFieldCount/QDescriptionOffset/QRecordCount/QFullRecordSize/QEntryOffset/QNextId/QIDLookupOffset/QUnknown2';
+	protected $FORMAT_COLUMN = 'LNameLength/LUnknown1/QNameOffset/SDataType/SUnknown2/LUnknown3';
 
 	/**
 	 * @return void
-	 */
-	public function __destruct(){
-
-		if(is_resource($this->fh)){
-			fclose($this->fh);
-		}
-
-	}
-
-	/**
-	 * @param string $name
-	 *
-	 * @return mixed|null
-	 */
-	public function __get(string $name){
-		return property_exists($this, $name) && $name !== 'fh' ? $this->{$name} : null;
-	}
-
-	/**
-	 * @param string $str
-	 *
-	 * @return string
-	 */
-	protected function decodeString(string $str):string{
-		return trim(mb_convert_encoding($str, 'UTF-8', 'UTF-16LE'));
-	}
-
-	/**
 	 * @throws \codemasher\WildstarDB\WSDBException
-	 * @return void
 	 */
 	protected function init():void{
-		$this->logger->info('init: '.$this->dtbl);
-
-		$this->fh   = fopen($this->dtbl, 'rb');
-		$header     = fread($this->fh, 0x60);
-		$this->cols = [];
-		$this->data = [];
-
-		if(strlen($header) !== 0x60){
-			throw new WSDBException('cannot read DTBL header');
-		}
-
-		$this->header = unpack($this::FORMAT_HEADER, $header);
 
 		if($this->header['Signature'] !== "\x4c\x42\x54\x44"){ // LBTD
 			throw new WSDBException('invalid DTBL');
@@ -135,7 +37,7 @@ class DTBLReader{
 		fseek($this->fh, $this->header['DescriptionOffset'] + 0x60);
 
 		for($i = 0; $i < $this->header['FieldCount']; $i++){
-			$this->cols[$i]['header'] = unpack($this::FORMAT_COLUMN, fread($this->fh, 0x18));
+			$this->cols[$i]['header'] = unpack($this->FORMAT_COLUMN, fread($this->fh, 0x18));
 		}
 
 		$offset = $this->header['FieldCount'] * 0x18 + $this->header['DescriptionOffset'] + 0x60;
@@ -153,19 +55,13 @@ class DTBLReader{
 	}
 
 	/**
-	 * @param string $dtbl
+	 * @param string $filename
 	 *
-	 * @return \codemasher\WildstarDB\DTBLReader
+	 * @return \codemasher\WildstarDB\ReaderInterface
 	 * @throws \codemasher\WildstarDB\WSDBException
 	 */
-	public function read(string $dtbl):DTBLReader{
-
-		if(!is_file($dtbl) || !is_readable($dtbl)){
-			throw new WSDBException('DTBL not readable');
-		}
-
-		$this->dtbl = $dtbl;
-
+	public function read(string $filename):ReaderInterface{
+		$this->loadFile($filename);
 		$this->init();
 
 		fseek($this->fh, $this->header['EntryOffset'] + 0x60);
@@ -233,7 +129,6 @@ class DTBLReader{
 
 		do{
 			$s = fread($this->fh, 2);
-
 			$v .= $s;
 		}
 		while($s !== "\x00\x00" && $s !== '');
@@ -241,152 +136,6 @@ class DTBLReader{
 		fseek($this->fh, $p);
 
 		return $this->decodeString($v);
-	}
-
-	/**
-	 * @throws \codemasher\WildstarDB\WSDBException
-	 * @return void
-	 */
-	protected function checkData():void{
-
-		if(empty($this->data)){
-			throw new WSDBException('empty data, run DTBLReader::read() first');
-		}
-
-	}
-
-	/**
-	 * @param string $data
-	 * @param string $file
-	 *
-	 * @return bool
-	 * @throws \codemasher\WildstarDB\WSDBException
-	 */
-	protected function saveToFile(string $data, string $file):bool{
-
-		if(!is_writable(dirname($file))){
-			throw new WSDBException('cannot write data to file: '.$file.', target directory is not writable');
-		}
-
-		return (bool)file_put_contents($file, $data);
-	}
-
-	/**
-	 * @param string|null $file
-	 * @param int|null    $jsonOptions
-	 *
-	 * @return string
-	 */
-	public function toJSON(string $file = null, int $jsonOptions = 0):string{
-		$this->checkData();
-
-		$json = json_encode($this->data, $jsonOptions);
-
-		if($file !== null){
-			$this->saveToFile($json, $file);
-		}
-
-		return $json;
-	}
-
-	/**
-	 * @param string|null $file
-	 * @param string      $delimiter
-	 * @param string      $enclosure
-	 * @param string      $escapeChar
-	 *
-	 * @return string
-	 */
-	public function toCSV(string $file = null, string $delimiter = ',', string $enclosure = '"', string $escapeChar = '\\'):string{
-		$this->checkData();
-
-		$mh = fopen('php://memory', 'r+');
-
-		fputcsv($mh, array_column($this->cols, 'name'), $delimiter, $enclosure, $escapeChar);
-
-		foreach($this->data as $row){
-			fputcsv($mh, array_values($row), $delimiter, $enclosure, $escapeChar);
-		}
-
-		rewind($mh);
-
-		$csv = stream_get_contents($mh);
-
-		fclose($mh);
-
-		if($file !== null){
-			$this->saveToFile($csv, $file);
-		}
-
-		return $csv;
-	}
-
-	/**
-	 * ugh!
-	 *
-	 * @param string|null $file
-	 *
-	 * @return string
-	 */
-	public function toXML(string $file = null):string{
-		$this->checkData();
-
-		$sxe = new \SimpleXMLElement('<?xml version="1.0" encoding="UTF-8"?><root></root>', LIBXML_BIGLINES);
-
-		$types = [3 => 'uint32', 4 => 'float', 11 => 'bool', 20 => 'uint64', 130 => 'string'];
-
-		foreach($this->data as $row){
-			$item = $sxe->addChild('item');
-
-			foreach(array_values($row) as $i => $value){
-				$item
-					->addChild($this->cols[$i]['name'], $value)
-					->addAttribute('dataType', $types[$this->cols[$i]['header']['DataType']]);
-				;
-			}
-		}
-
-		$xml = $sxe->asXML();
-
-		if($file !== null){
-			$this->saveToFile($xml, $file);
-		}
-
-		return $xml;
-	}
-
-	/**
-	 * @param \chillerlan\Database\Database $db
-	 * @return void
-	 */
-	public function toDB(Database $db):void{
-		// Windows: https://dev.mysql.com/doc/refman/8.0/en/server-system-variables.html#sysvar_lower_case_table_names
-		$createTable = $db->create
-			->table($this->name)
-			->primaryKey($this->cols[0]['name'])
-			->ifNotExists()
-		;
-
-		foreach($this->cols as $i => $col){
-
-			switch($col['header']['DataType']){
-				case 3:   $createTable->int($col['name'], 10, null, null, 'UNSIGNED'); break;
-				case 4:   $createTable->decimal($col['name'], '7,3', 0); break;
-				case 11:  $createTable->field($col['name'], 'BOOLEAN'); break;
-				case 20:  $createTable->field($col['name'], 'BIGINT', null, 'UNSIGNED'); break;
-				case 130: $createTable->text($col['name']); break;
-			}
-
-		}
-
-		$createTable->query();
-
-		if(count($this->data) < 1){
-			$this->logger->notice('no records available for table '.$this->name);
-			return;
-		}
-
-		$db->insert->into($this->name)->values($this->data)->multi();
 	}
 
 }
