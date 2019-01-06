@@ -81,11 +81,11 @@ class DTBLReader extends ReaderAbstract{
 				switch($col['header']['DataType']){
 					case 3:  // uint32
 					case 11: // booleans (stored as uint32 0/1)
-						$v = unpack('L', substr($data, $j, 4))[1]; $j += 4; break;
+						$v = uint32(substr($data, $j, 4)); $j += 4; break;
 					case 4:  // float
-						$v = round(unpack('f', substr($data, $j, 4))[1], 3); $j += 4; break;
+						$v = round(float(substr($data, $j, 4)), 3); $j += 4; break;
 					case 20: // uint64
-						$v = unpack('Q', substr($data, $j, 8))[1]; $j += 8; break;
+						$v = uint64(substr($data, $j, 8)); $j += 8; break;
 					case 130: // string
 						$v = $this->readString($data, $j, $skip); $j += 8; break;
 
@@ -119,11 +119,11 @@ class DTBLReader extends ReaderAbstract{
 	 * @return string
 	 */
 	protected function readString(string $data, int $j, bool &$skip):string{
-		$o    = unpack('L', substr($data, $j, 4))[1];
+		$o    = uint32(substr($data, $j, 4));
 		$p    = ftell($this->fh);
 		$skip = $o === 0;
 
-		fseek($this->fh, $this->header['EntryOffset'] + 0x60 + ($o > 0 ? $o : unpack('L', substr($data, $j + 4, 4))[1]));
+		fseek($this->fh, $this->header['EntryOffset'] + 0x60 + ($o > 0 ? $o : uint32(substr($data, $j + 4, 4))));
 
 		$v = '';
 

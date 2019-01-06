@@ -29,6 +29,9 @@
 		"chillerlan/php-cache": "^3.0"
 	},
 	"autoload": {
+		"files": [
+			"src/includes.php"
+		],
 		"psr-4": {
 			"codemasher\\WildstarDB\\": "src/"
 		}

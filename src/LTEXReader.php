@@ -2,6 +2,8 @@
 /**
  * Class LTEXReader
  *
+ * @link https://arctium.io/wiki/index.php?title=Locale_Lookup_Index_(.bin)
+ *
  * @filesource   LTEXReader.php
  * @created      05.01.2019
  * @package      codemasher\WildstarDB
@@ -49,11 +51,12 @@ class LTEXReader extends ReaderAbstract{
 		fseek($this->fh, 0x60 + $this->header['EntryIndexPtr']);
 
 		for($i = 0; $i < $this->header['EntryCount']; $i++){
-			$a = unpack('Lid/Lpos', fread($this->fh, 8));
-			$p = ftell($this->fh);
-			$v = '';
+			$id  = uint32(fread($this->fh, 4));
+			$pos = uint32(fread($this->fh, 4));
+			$p   = ftell($this->fh);
+			$v   = '';
 
-			fseek($this->fh, 0x60 + $this->header['NameStorePtr'] + ($a['pos'] * 2));
+			fseek($this->fh, 0x60 + $this->header['NameStorePtr'] + ($pos * 2));
 
 			do{
 				$s = fread($this->fh, 2);
@@ -61,7 +64,7 @@ class LTEXReader extends ReaderAbstract{
 			}
 			while($s !== "\x00\x00" && $s !== '');
 
-			$this->data[$i] = ['ID' => $a['id'], 'LocalizedText' => $this->decodeString($v)];
+			$this->data[$i] = ['ID' => $id, 'LocalizedText' => $this->decodeString($v)];
 			fseek($this->fh, $p);
 		}
 
