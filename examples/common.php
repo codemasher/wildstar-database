@@ -9,13 +9,12 @@
 
 namespace chillerlan\WildstarDBExamples;
 
-use chillerlan\Database\{Database, DatabaseOptionsTrait, Drivers\MySQLiDrv};
+use chillerlan\Database\{Database, DatabaseOptions, Drivers\MySQLiDrv};
 use chillerlan\DotEnv\DotEnv;
-use chillerlan\Logger\{Log, LogOptionsTrait, Output\ConsoleLog};
-use chillerlan\Settings\SettingsContainerAbstract;
 use chillerlan\SimpleCache\MemoryCache;
+use Psr\Log\AbstractLogger;
 
-mb_internal_encoding('UTF-8');
+\mb_internal_encoding('UTF-8');
 
 require_once __DIR__.'/../vendor/autoload.php';
 
@@ -30,17 +29,15 @@ $o = [
 	'database'    => $env->DB_DATABASE,
 	'username'    => $env->DB_USERNAME,
 	'password'    => $env->DB_PASSWORD,
-	// LogOptions
-	'minLogLevel' => 'info',
 ];
 
-$options = new class($o) extends SettingsContainerAbstract{
-	use DatabaseOptionsTrait, LogOptionsTrait;
+$logger = new class() extends AbstractLogger{
+	public function log($level, $message, array $context = []){
+		echo \sprintf('[%s][%s] %s', \date('Y-m-d H:i:s'), \substr($level, 0, 4), \trim($message))."\n";
+	}
 };
 
-$logger = (new Log)->addInstance(new ConsoleLog($options), 'app-log');
-$cache  = new MemoryCache;
-$db     = new Database($options, $cache, $logger);
+$db = new Database(new DatabaseOptions($o), new MemoryCache, $logger);
 
 $db->connect();
 

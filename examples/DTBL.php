@@ -10,7 +10,7 @@
 namespace codemasher\WildstarDBExamples;
 
 use codemasher\WildstarDB\DTBLReader;
-use FilesystemIterator, RecursiveDirectoryIterator, RecursiveIteratorIterator;
+use DirectoryIterator, Throwable;
 
 /** @var \chillerlan\Database\Database $db */
 $db = null;
@@ -21,9 +21,9 @@ $logger = null;
 require_once __DIR__.'/common.php';
 
 $reader   = new DTBLReader($logger);
-$iterator = new RecursiveDirectoryIterator(__DIR__.'/tbl', FilesystemIterator::SKIP_DOTS);
+$iterator = new DirectoryIterator(__DIR__.'/tbl');
 
-foreach(new RecursiveIteratorIterator($iterator) as $finfo){
+foreach($iterator as $finfo){
 
 	if($finfo->getExtension() !== 'tbl'){
 		$logger->notice($finfo->getFilename().' is probably not a DTBL');
@@ -36,7 +36,7 @@ foreach(new RecursiveIteratorIterator($iterator) as $finfo){
 
 		$logger->info('success: '.$finfo->getFilename());
 	}
-	catch(\Exception $e){
+	catch(Throwable $e){
 		$logger->error($finfo->getFilename().': '.$e->getMessage());
 	}
 

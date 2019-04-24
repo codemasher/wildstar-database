@@ -25,7 +25,6 @@
 	"require-dev": {
 		"phpunit/phpunit": "^7.5",
 		"chillerlan/php-dotenv": "^1.0",
-		"chillerlan/php-log": "^3.0",
 		"chillerlan/php-cache": "^3.0"
 	},
 	"autoload": {

@@ -13,6 +13,12 @@ const WSDB_FUNCTIONS = true;
 
 // http://php.net/manual/en/function.pack.php#119402
 
+/**
+ * @param int|string $i
+ * @param bool|null  $endianness
+ *
+ * @return array|string|false
+ */
 function uint32($i, bool $endianness = null){
 
 	if($endianness === true){ // big-endian
@@ -25,11 +31,17 @@ function uint32($i, bool $endianness = null){
 		$f = 'L';
 	}
 
-	$i = is_int($i) ? pack($f, $i) : unpack($f, $i);
+	$i = \is_int($i) ? \pack($f, $i) : \unpack($f, $i);
 
-	return is_array($i) ? $i[1] : $i;
+	return \is_array($i) ? $i[1] : $i;
 }
 
+/**
+ * @param int|string $i
+ * @param bool|null  $endianness
+ *
+ * @return array|string|false
+ */
 function uint64($i, bool $endianness = null){
 
 	if($endianness === true){ // big-endian
@@ -42,11 +54,17 @@ function uint64($i, bool $endianness = null){
 		$f = 'Q';
 	}
 
-	$i = is_int($i) ? pack($f, $i) : unpack($f, $i);
+	$i = \is_int($i) ? \pack($f, $i) : \unpack($f, $i);
 
-	return is_array($i) ? $i[1] : $i;
+	return \is_array($i) ? $i[1] : $i;
 }
 
+/**
+ * @param float|int|string $i
+ * @param bool|null        $endianness
+ *
+ * @return array|string|false
+ */
 function float($i, bool $endianness = null){
 
 	if($endianness === true){ // big-endian
@@ -59,7 +77,7 @@ function float($i, bool $endianness = null){
 		$f = 'f';
 	}
 
-	$i = is_float($i) || is_int($i) ? pack($f, $i) : unpack($f, $i);
+	$i = (\is_float($i) || \is_int($i)) ? \pack($f, $i) : \unpack($f, $i);
 
-	return is_array($i) ? $i[1] : $i;
+	return \is_array($i) ? $i[1] : $i;
 }

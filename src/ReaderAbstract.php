@@ -21,6 +21,7 @@ use Psr\Log\{LoggerAwareInterface, LoggerAwareTrait, LoggerInterface, NullLogger
  * @property string $name
  * @property array  $cols
  * @property array  $data
+ * @property int    $headerSize
  */
 abstract class ReaderAbstract implements ReaderInterface, LoggerAwareInterface{
 	use LoggerAwareTrait;
@@ -62,6 +63,11 @@ abstract class ReaderAbstract implements ReaderInterface, LoggerAwareInterface{
 	protected $fh;
 
 	/**
+	 * @var int
+	 */
+	protected $headerSize = 0x60;
+
+	/**
 	 * DTBLReader constructor.
 	 *
 	 * @param \Psr\Log\LoggerInterface|null $logger
@@ -70,7 +76,7 @@ abstract class ReaderAbstract implements ReaderInterface, LoggerAwareInterface{
 	 */
 	public function __construct(LoggerInterface $logger = null){
 
-		if(PHP_INT_SIZE < 8){
+		if(\PHP_INT_SIZE < 8){
 			throw new WSDBException('64-bit PHP required');
 		}
 
@@ -82,8 +88,8 @@ abstract class ReaderAbstract implements ReaderInterface, LoggerAwareInterface{
 	 */
 	public function __destruct(){
 
-		if(is_resource($this->fh)){
-			fclose($this->fh);
+		if(\is_resource($this->fh)){
+			\fclose($this->fh);
 		}
 
 	}
@@ -94,7 +100,7 @@ abstract class ReaderAbstract implements ReaderInterface, LoggerAwareInterface{
 	 * @return mixed|null
 	 */
 	public function __get(string $name){
-		return property_exists($this, $name) && $name !== 'fh' ? $this->{$name} : null;
+		return \property_exists($this, $name) && $name !== 'fh' ? $this->{$name} : null;
 	}
 
 	/**
@@ -104,25 +110,25 @@ abstract class ReaderAbstract implements ReaderInterface, LoggerAwareInterface{
 	 * @throws \codemasher\WildstarDB\WSDBException
 	 */
 	protected function loadFile(string $filename):void{
+		$filename = \realpath($filename);
 
-		if(!is_file($filename) || !is_readable($filename)){
+		if(!$filename || !\is_file($filename) || !\is_readable($filename)){
 			throw new WSDBException('input file not readable');
 		}
 
 		$this->file = $filename;
+		$this->cols = [];
+		$this->data = [];
+		$this->fh   = \fopen($this->file, 'rb');
+		$header     = \fread($this->fh, $this->headerSize);
 
 		$this->logger->info('loading: '.$this->file);
 
-		$this->fh   = fopen($this->file, 'rb');
-		$header     = fread($this->fh, 0x60);
-		$this->cols = [];
-		$this->data = [];
-
-		if(strlen($header) !== 0x60){
+		if(\strlen($header) !== $this->headerSize){
 			throw new WSDBException('cannot read header');
 		}
 
-		$this->header = unpack($this->FORMAT_HEADER, $header);
+		$this->header = \unpack($this->FORMAT_HEADER, $header);
 	}
 
 	/**
@@ -131,7 +137,7 @@ abstract class ReaderAbstract implements ReaderInterface, LoggerAwareInterface{
 	 * @return string
 	 */
 	protected function decodeString(string $str):string{
-		return trim(mb_convert_encoding($str, 'UTF-8', 'UTF-16LE'));
+		return \trim(\mb_convert_encoding($str, 'UTF-8', 'UTF-16LE'));
 	}
 
 	/**
@@ -155,11 +161,11 @@ abstract class ReaderAbstract implements ReaderInterface, LoggerAwareInterface{
 	 */
 	protected function saveToFile(string $data, string $file):bool{
 
-		if(!is_writable(dirname($file))){
+		if(!\is_writable(\dirname($file))){
 			throw new WSDBException('cannot write data to file: '.$file.', target directory is not writable');
 		}
 
-		return (bool)file_put_contents($file, $data);
+		return (bool)\file_put_contents($file, $data);
 	}
 
 	/**
@@ -171,7 +177,7 @@ abstract class ReaderAbstract implements ReaderInterface, LoggerAwareInterface{
 	public function toJSON(string $file = null, int $jsonOptions = 0):string{
 		$this->checkData();
 
-		$json = json_encode($this->data, $jsonOptions);
+		$json = \json_encode($this->data, $jsonOptions);
 
 		if($file !== null){
 			$this->saveToFile($json, $file);
@@ -191,19 +197,19 @@ abstract class ReaderAbstract implements ReaderInterface, LoggerAwareInterface{
 	public function toCSV(string $file = null, string $delimiter = ',', string $enclosure = '"', string $escapeChar = '\\'):string{
 		$this->checkData();
 
-		$mh = fopen('php://memory', 'r+');
+		$mh = \fopen('php://memory', 'r+');
 
-		fputcsv($mh, array_column($this->cols, 'name'), $delimiter, $enclosure, $escapeChar);
+		\fputcsv($mh, \array_column($this->cols, 'name'), $delimiter, $enclosure, $escapeChar);
 
 		foreach($this->data as $row){
-			fputcsv($mh, array_values($row), $delimiter, $enclosure, $escapeChar);
+			\fputcsv($mh, \array_values($row), $delimiter, $enclosure, $escapeChar);
 		}
 
-		rewind($mh);
+		\rewind($mh);
 
-		$csv = stream_get_contents($mh);
+		$csv = \stream_get_contents($mh);
 
-		fclose($mh);
+		\fclose($mh);
 
 		if($file !== null){
 			$this->saveToFile($csv, $file);
@@ -222,14 +228,13 @@ abstract class ReaderAbstract implements ReaderInterface, LoggerAwareInterface{
 	public function toXML(string $file = null):string{
 		$this->checkData();
 
-		$sxe = new \SimpleXMLElement('<?xml version="1.0" encoding="UTF-8"?><root></root>', LIBXML_BIGLINES);
-
+		$sxe   = new \SimpleXMLElement('<?xml version="1.0" encoding="UTF-8"?><root></root>', \LIBXML_BIGLINES);
 		$types = [3 => 'uint32', 4 => 'float', 11 => 'bool', 20 => 'uint64', 130 => 'string'];
 
 		foreach($this->data as $row){
 			$item = $sxe->addChild('item');
 
-			foreach(array_values($row) as $i => $value){
+			foreach(\array_values($row) as $i => $value){
 				$item
 					->addChild($this->cols[$i]['name'], $value)
 					->addAttribute('dataType', $types[$this->cols[$i]['header']['DataType']]);
@@ -247,10 +252,11 @@ abstract class ReaderAbstract implements ReaderInterface, LoggerAwareInterface{
 	}
 
 	/**
-	 * @return void
 	 * @param \chillerlan\Database\Database $db
+	 *
+	 * @return \codemasher\WildstarDB\ReaderInterface
 	 */
-	public function toDB(Database $db):void{
+	public function toDB(Database $db):ReaderInterface{
 		// Windows: https://dev.mysql.com/doc/refman/8.0/en/server-system-variables.html#sysvar_lower_case_table_names
 		$createTable = $db->create
 			->table($this->name)
@@ -270,14 +276,18 @@ abstract class ReaderAbstract implements ReaderInterface, LoggerAwareInterface{
 
 		}
 
+		$this->logger->info($createTable->sql());
+
 		$createTable->query();
 
-		if(count($this->data) < 1){
+		if(\count($this->data) < 1){
 			$this->logger->notice('no records available for table '.$this->name);
-			return;
+			return $this;
 		}
 
 		$db->insert->into($this->name)->values($this->data)->multi();
+
+		return $this;
 	}
 
 }

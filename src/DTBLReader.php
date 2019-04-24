@@ -30,26 +30,26 @@ class DTBLReader extends ReaderAbstract{
 			throw new WSDBException('invalid DTBL');
 		}
 
-		$this->name = $this->decodeString(fread($this->fh, $this->header['TableNameLength'] * 2));
+		$this->name = $this->decodeString(\fread($this->fh, $this->header['TableNameLength'] * 2));
 
 		$this->logger->info($this->name.', fields: '.$this->header['FieldCount'].', rows: '.$this->header['RecordCount']);
 
-		fseek($this->fh, $this->header['DescriptionOffset'] + 0x60);
+		\fseek($this->fh, $this->header['DescriptionOffset'] + $this->headerSize);
 
 		for($i = 0; $i < $this->header['FieldCount']; $i++){
-			$this->cols[$i]['header'] = unpack($this->FORMAT_COLUMN, fread($this->fh, 0x18));
+			$this->cols[$i]['header'] = \unpack($this->FORMAT_COLUMN, \fread($this->fh, 0x18));
 		}
 
-		$offset = $this->header['FieldCount'] * 0x18 + $this->header['DescriptionOffset'] + 0x60;
+		$offset = $this->header['FieldCount'] * 0x18 + $this->header['DescriptionOffset'] + $this->headerSize;
 
 		if($this->header['FieldCount'] % 2){
 			$offset += 8;
 		}
 
 		foreach($this->cols as $i => $col){
-			fseek($this->fh, $offset + $col['header']['NameOffset']);
+			\fseek($this->fh, $offset + $col['header']['NameOffset']);
 
-			$this->cols[$i]['name'] = $this->decodeString(fread($this->fh, $col['header']['NameLength'] * 2));
+			$this->cols[$i]['name'] = $this->decodeString(\fread($this->fh, $col['header']['NameLength'] * 2));
 		}
 
 	}
@@ -64,10 +64,10 @@ class DTBLReader extends ReaderAbstract{
 		$this->loadFile($filename);
 		$this->init();
 
-		fseek($this->fh, $this->header['EntryOffset'] + 0x60);
+		\fseek($this->fh, $this->header['EntryOffset'] + $this->headerSize);
 
 		for($i = 0; $i < $this->header['RecordCount']; $i++){
-			$data = fread($this->fh, $this->header['RecordSize']);
+			$data = \fread($this->fh, $this->header['RecordSize']);
 			$row  = [];
 			$j    = 0;
 			$skip = false;
@@ -81,11 +81,11 @@ class DTBLReader extends ReaderAbstract{
 				switch($col['header']['DataType']){
 					case 3:  // uint32
 					case 11: // booleans (stored as uint32 0/1)
-						$v = uint32(substr($data, $j, 4)); $j += 4; break;
+						$v = uint32(\substr($data, $j, 4)); $j += 4; break;
 					case 4:  // float
-						$v = round(float(substr($data, $j, 4)), 3); $j += 4; break;
+						$v = \round(float(\substr($data, $j, 4)), 3); $j += 4; break;
 					case 20: // uint64
-						$v = uint64(substr($data, $j, 8)); $j += 8; break;
+						$v = uint64(\substr($data, $j, 8)); $j += 8; break;
 					case 130: // string
 						$v = $this->readString($data, $j, $skip); $j += 8; break;
 
@@ -95,16 +95,16 @@ class DTBLReader extends ReaderAbstract{
 				$row[$col['name']] = $v;
 			}
 
-			if(count($row) !== $this->header['FieldCount']){
+			if(\count($row) !== $this->header['FieldCount']){
 				throw new WSDBException('invalid field count');
 			}
 
 			$this->data[$i] = $row;
 		}
 
-		fclose($this->fh);
+		\fclose($this->fh);
 
-		if(count($this->data) !== $this->header['RecordCount']){
+		if(\count($this->data) !== $this->header['RecordCount']){
 			throw new WSDBException('invalid row count');
 		}
 
@@ -119,21 +119,21 @@ class DTBLReader extends ReaderAbstract{
 	 * @return string
 	 */
 	protected function readString(string $data, int $j, bool &$skip):string{
-		$o    = uint32(substr($data, $j, 4));
-		$p    = ftell($this->fh);
+		$o    = uint32(\substr($data, $j, 4));
+		$p    = \ftell($this->fh);
 		$skip = $o === 0;
 
-		fseek($this->fh, $this->header['EntryOffset'] + 0x60 + ($o > 0 ? $o : uint32(substr($data, $j + 4, 4))));
+		\fseek($this->fh, $this->header['EntryOffset'] + $this->headerSize + ($o > 0 ? $o : uint32(\substr($data, $j + 4, 4))));
 
 		$v = '';
 
 		do{
-			$s = fread($this->fh, 2);
+			$s = \fread($this->fh, 2);
 			$v .= $s;
 		}
 		while($s !== "\x00\x00" && $s !== '');
 
-		fseek($this->fh, $p);
+		\fseek($this->fh, $p);
 
 		return $this->decodeString($v);
 	}

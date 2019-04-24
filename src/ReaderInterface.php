@@ -60,6 +60,6 @@ interface ReaderInterface{
 	 * @param \chillerlan\Database\Database $db
 	 * @return void
 	 */
-	public function toDB(Database $db):void;
+	public function toDB(Database $db):ReaderInterface;
 
 }
