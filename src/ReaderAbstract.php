@@ -14,6 +14,7 @@ namespace codemasher\WildstarDB;
 
 use chillerlan\Database\Database;
 use Psr\Log\{LoggerAwareInterface, LoggerAwareTrait, LoggerInterface, NullLogger};
+use SimpleXMLElement;
 
 /**
  * @property string $file
@@ -65,10 +66,10 @@ abstract class ReaderAbstract implements ReaderInterface, LoggerAwareInterface{
 	/**
 	 * @var int
 	 */
-	protected $headerSize = 0x60;
+	protected $headerSize = 96;
 
 	/**
-	 * DTBLReader constructor.
+	 * ReaderInterface constructor.
 	 *
 	 * @param \Psr\Log\LoggerInterface|null $logger
 	 *
@@ -87,11 +88,30 @@ abstract class ReaderAbstract implements ReaderInterface, LoggerAwareInterface{
 	 * @return void
 	 */
 	public function __destruct(){
+		$this->logger->info('memory usage: '.(\memory_get_usage(true)/1048576).'MB');
+		$this->logger->info('peak memory usage: '.(\memory_get_peak_usage(true)/1048576).'MB');
+
+		$this->close();
+	}
+
+	/**
+	 * @return \codemasher\WildstarDB\ReaderInterface
+	 */
+	public function close():ReaderInterface{
 
 		if(\is_resource($this->fh)){
 			\fclose($this->fh);
+
+			$this->fh = null;
 		}
 
+		$this->file   = '';
+		$this->name   = '';
+		$this->header = [];
+		$this->cols   = [];
+		$this->data   = [];
+
+		return $this;
 	}
 
 	/**
@@ -110,6 +130,7 @@ abstract class ReaderAbstract implements ReaderInterface, LoggerAwareInterface{
 	 * @throws \codemasher\WildstarDB\WSDBException
 	 */
 	protected function loadFile(string $filename):void{
+		$this->close();
 		$filename = \realpath($filename);
 
 		if(!$filename || !\is_file($filename) || !\is_readable($filename)){
@@ -117,8 +138,6 @@ abstract class ReaderAbstract implements ReaderInterface, LoggerAwareInterface{
 		}
 
 		$this->file = $filename;
-		$this->cols = [];
-		$this->data = [];
 		$this->fh   = \fopen($this->file, 'rb');
 		$header     = \fread($this->fh, $this->headerSize);
 
@@ -147,7 +166,7 @@ abstract class ReaderAbstract implements ReaderInterface, LoggerAwareInterface{
 	protected function checkData():void{
 
 		if(empty($this->data)){
-			throw new WSDBException('empty data, run DTBLReader::read() first');
+			throw new WSDBException('empty data, run ReaderInterface::read() first');
 		}
 
 	}
@@ -164,6 +183,8 @@ abstract class ReaderAbstract implements ReaderInterface, LoggerAwareInterface{
 		if(!\is_writable(\dirname($file))){
 			throw new WSDBException('cannot write data to file: '.$file.', target directory is not writable');
 		}
+
+		$this->logger->info('writing data to file: '.$file);
 
 		return (bool)\file_put_contents($file, $data);
 	}
@@ -228,7 +249,7 @@ abstract class ReaderAbstract implements ReaderInterface, LoggerAwareInterface{
 	public function toXML(string $file = null):string{
 		$this->checkData();
 
-		$sxe   = new \SimpleXMLElement('<?xml version="1.0" encoding="UTF-8"?><root></root>', \LIBXML_BIGLINES);
+		$sxe   = new SimpleXMLElement('<?xml version="1.0" encoding="UTF-8"?><root></root>', \LIBXML_BIGLINES);
 		$types = [3 => 'uint32', 4 => 'float', 11 => 'bool', 20 => 'uint64', 130 => 'string'];
 
 		foreach($this->data as $row){

@@ -35,10 +35,13 @@ class LTEXReader extends ReaderAbstract{
 	protected $prettyname;
 
 	/**
-	 * @return void
+	 * @param string $filename
+	 *
+	 * @return \codemasher\WildstarDB\ReaderInterface
 	 * @throws \codemasher\WildstarDB\WSDBException
 	 */
-	protected function init():void{
+	public function read(string $filename):ReaderInterface{
+		$this->loadFile($filename);
 
 		if($this->header['Signature'] !== "\x58\x45\x54\x4c"){ // XETL
 			throw new WSDBException('invalid LTEX');
@@ -53,39 +56,44 @@ class LTEXReader extends ReaderAbstract{
 			['name' => 'LocalizedText', 'header' => ['DataType' => 130]],
 		];
 
+		$this->readData();
+
 		$this->logger->info($this->prettyname.' ('.$this->header['LCID'].', '.$this::LCID[$this->header['LCID']].'), rows: '.$this->header['EntryCount']);
+
+		return $this;
 	}
 
 	/**
-	 * @param string $filename
-	 *
-	 * @return \codemasher\WildstarDB\ReaderInterface
+	 * @return void
 	 */
-	public function read(string $filename):ReaderInterface{
-		$this->loadFile($filename);
-		$this->init();
-
+	protected function readData():void{
 		\fseek($this->fh, $this->headerSize + $this->header['EntryIndexPtr']);
 
-		for($i = 0; $i < $this->header['EntryCount']; $i++){
-			$id  = uint32(\fread($this->fh, 4));
-			$pos = uint32(\fread($this->fh, 4));
-			$p   = \ftell($this->fh);
-			$v   = '';
+		$this->data = array_fill(0, $this->header['EntryCount'], null);
 
-			\fseek($this->fh, $this->headerSize + $this->header['NameStorePtr'] + $pos * 2);
+		foreach($this->data as $i => $_){
+			// get the id and offset for the data block
+			$c = \unpack('Lid/Loffset', \fread($this->fh, 8));
+			// save the current position
+			$p = \ftell($this->fh);
 
+			// seek forward to the data block
+			\fseek($this->fh, $this->headerSize + $this->header['NameStorePtr'] + $c['offset'] * 2);
+
+			$v = '';
+			// read until we hit a double nul or the void
 			do{
 				$s = \fread($this->fh, 2);
 				$v .= $s;
 			}
 			while($s !== "\x00\x00" && $s !== '');
 
-			$this->data[$i] = ['ID' => $id, 'LocalizedText' => $this->decodeString($v)];
+			$this->data[$i] = ['ID' => $c['id'], 'LocalizedText' => $this->decodeString($v)];
+
+			// restore the previous position
 			\fseek($this->fh, $p);
 		}
 
-		return $this;
 	}
 
 }

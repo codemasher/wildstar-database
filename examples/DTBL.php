@@ -25,6 +25,10 @@ $iterator = new DirectoryIterator(__DIR__.'/tbl');
 
 foreach($iterator as $finfo){
 
+	if($finfo->isDot()){
+		continue;
+	}
+
 	if($finfo->getExtension() !== 'tbl'){
 		$logger->notice($finfo->getFilename().' is probably not a DTBL');
 		continue;
@@ -34,7 +38,7 @@ foreach($iterator as $finfo){
 		$reader->read($finfo->getRealPath());
 		$reader->toDB($db);
 
-		$logger->info('success: '.$finfo->getFilename());
+		$logger->info('success: '.$reader->name.', '.$finfo->getFilename());
 	}
 	catch(Throwable $e){
 		$logger->error($finfo->getFilename().': '.$e->getMessage());

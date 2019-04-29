@@ -25,14 +25,15 @@ $reader = new LTEXReader($logger);
 #$reader->read(__DIR__.'/en-US.bin')->toJSON(__DIR__.'/en.json', JSON_PRETTY_PRINT);
 #$reader->read(__DIR__.'/de-DE.bin')->toCSV(__DIR__.'/de.csv', '|', '`');
 
-foreach(['de-DE'/*, 'en-US', 'fr-FR'*/] as $lang){
+foreach(['de-DE', 'en-US', 'fr-FR'] as $lang){
 	$file  = __DIR__.'/'.$lang.'.bin';
 	$table = 'LocalizedText_'.$lang;
 
 	try{
 		$db->drop->table($table)->ifExists()->query();
 
-		$reader->read($file)->toDB($db);
+		$reader->read($file);
+		$reader->toDB($db);
 
 		// defrag & optimize table
 		$db->raw('ALTER TABLE `'.$table.'` ENGINE=InnoDB');
