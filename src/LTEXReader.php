@@ -27,6 +27,10 @@ class LTEXReader extends ReaderAbstract{
 		0x0412 => 'ko-KR', // 1042
 	];
 
+	/**
+	 * @var string
+	 * @internal
+	 */
 	protected $FORMAT_HEADER = 'a4Signature/LVersion/LLanguage/LLCID/QTagNameStringLength/QTagNameStringPtr/QShortNameStringLength/QShortNameStringPtr/QLongNameStringLength/QLongNameStringPtr/QEntryCount/QEntryIndexPtr/QNameStoreLength/QNameStorePtr';
 
 	/**

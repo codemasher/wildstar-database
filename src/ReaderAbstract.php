@@ -30,6 +30,7 @@ abstract class ReaderAbstract implements ReaderInterface, LoggerAwareInterface{
 	/**
 	 * @see http://php.net/manual/function.pack.php
 	 * @var string
+	 * @internal
 	 */
 	protected $FORMAT_HEADER;
 
@@ -60,11 +61,13 @@ abstract class ReaderAbstract implements ReaderInterface, LoggerAwareInterface{
 
 	/**
 	 * @var resource
+	 * @internal
 	 */
 	protected $fh;
 
 	/**
 	 * @var int
+	 * @internal
 	 */
 	protected $headerSize = 96;
 

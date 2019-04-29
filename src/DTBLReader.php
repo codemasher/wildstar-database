@@ -17,7 +17,29 @@ namespace codemasher\WildstarDB;
 
 class DTBLReader extends ReaderAbstract{
 
+	/**
+	 * @var string
+	 * @internal
+	 */
 	protected $FORMAT_HEADER = 'a4Signature/LVersion/QTableNameLength/x8/QRecordSize/QFieldCount/QDescriptionOffset/QRecordCount/QFullRecordSize/QEntryOffset/QNextId/QIDLookupOffset/x8';
+
+	/**
+	 * @var bool
+	 * @internal
+	 */
+	protected $skip;
+
+	/**
+	 * @var int
+	 * @internal
+	 */
+	protected $pos;
+
+	/**
+	 * @var string
+	 * @internal
+	 */
+	protected $rowdata;
 
 	/**
 	 * @param string $filename
@@ -86,59 +108,67 @@ class DTBLReader extends ReaderAbstract{
 
 		// read a row
 		foreach($this->data as $i => $_){
-			$data = \fread($this->fh, $this->header['RecordSize']);
-			$row  = [];
-			$j    = 0;
-			$skip = false;
+			$this->rowdata = \fread($this->fh, $this->header['RecordSize']);
+			$this->pos     = 0;
+			$this->skip    = false;
 
 			// loop through the columns
 			foreach($this->cols as $c => $col){
 
 				// skip 4 bytes if the string offset is 0 (determined by $skip), the current type is string and the next isn't
-				if($skip === true && ($c > 0 && $this->cols[$c - 1]['header']['DataType'] === 130) && $col['header']['DataType'] !== 130){
-					$j += 4;
+				if($this->skip === true && ($c > 0 && $this->cols[$c - 1]['header']['DataType'] === 130) && $col['header']['DataType'] !== 130){
+					$this->pos += 4;
 				}
 
-				switch($col['header']['DataType']){
-					case 3:  // uint32
-					case 11: // booleans (stored as uint32 0/1)
-						$v = uint32(\substr($data, $j, 4)); $j += 4; break;
-					case 4:  // float
-						$v = \round(float(\substr($data, $j, 4)), 3); $j += 4; break;
-					case 20: // uint64
-						$v = uint64(\substr($data, $j, 8)); $j += 8; break;
-					case 130: // string (UTF-16LE)
-						$v = $this->readString($data, $j, $skip); $j += 8; break;
-
-					default: $v = null;
-				}
-
-				$row[$col['name']] = $v;
+				$this->data[$i][$col['name']] = $this->getValue($col['header']['DataType']);
 			}
 
 			// if we run into this, a horrible thing happened
-			if(\count($row) !== $this->header['FieldCount']){
+			if(\count($this->data[$i]) !== $this->header['FieldCount']){
 				throw new WSDBException('invalid field count');
 			}
 
-			$this->data[$i] = $row;
 		}
 
 	}
 
 	/**
-	 * @param string $data
-	 * @param int    $j
-	 * @param bool   $skip
+	 * @param int $datatype
 	 *
+	 * @return int|float|string|null
+	 */
+	protected function getValue(int $datatype){
+
+		switch($datatype){
+			case 3:  // uint32
+			case 11: // booleans (stored as uint32 0/1)
+				$v = uint32(\substr($this->rowdata, $this->pos, 4));
+				$this->pos += 4; break;
+			case 4:  // float
+				$v = \round(float(\substr($this->rowdata, $this->pos, 4)), 3); // @todo: determine round precision
+				$this->pos += 4; break;
+			case 20: // uint64
+				$v = uint64(\substr($this->rowdata, $this->pos, 8));
+				$this->pos += 8; break;
+			case 130: // string (UTF-16LE)
+				$v = $this->readString();
+				$this->pos += 8; break;
+
+			default: $v = null;
+		}
+
+		return $v;
+	}
+
+	/**
 	 * @return string
 	 */
-	protected function readString(string $data, int $j, bool &$skip):string{
-		$o    = uint32(\substr($data, $j, 4));
+	protected function readString():string{
+		$o    = uint32(\substr($this->rowdata, $this->pos, 4));
 		$p    = \ftell($this->fh);
-		$skip = $o === 0;
+		$this->skip = $o === 0;
 
-		\fseek($this->fh, $this->header['EntryOffset'] + $this->headerSize + ($o > 0 ? $o : uint32(\substr($data, $j + 4, 4))));
+		\fseek($this->fh, $this->header['EntryOffset'] + $this->headerSize + ($o > 0 ? $o : uint32(\substr($this->rowdata, $this->pos + 4, 4))));
 
 		$v = '';
 		// loop through the string until we hit 2 nul bytes or the void

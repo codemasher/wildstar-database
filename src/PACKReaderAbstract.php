@@ -21,6 +21,7 @@ abstract class PACKReaderAbstract extends ReaderAbstract{
 
 	/**
 	 * @var string
+	 * @internal
 	 */
 	protected $FORMAT_HEADER = 'a4Signature/LVersion/x512/QFilesize/x8/QBlockTableOffset/LBlockCount/x4/LRootInfoIndex/x8';
 
@@ -28,6 +29,7 @@ abstract class PACKReaderAbstract extends ReaderAbstract{
 	 * 4+4+512+8+8+8+4+4+4+8 = 564 bytes
 	 *
 	 * @var int
+	 * @internal
 	 */
 	protected $headerSize = 564;
 
