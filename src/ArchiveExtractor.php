@@ -38,6 +38,8 @@ class ArchiveExtractor implements LoggerAwareInterface{
 	/** @var string */
 	protected $destination;
 	/** @var \codemasher\WildstarDB\ArchiveFile[] */
+	public $errors;
+	/** @var \codemasher\WildstarDB\ArchiveFile[] */
 	public $warnings;
 
 	/**
@@ -172,27 +174,33 @@ class ArchiveExtractor implements LoggerAwareInterface{
 
 		// $Flags is supposed to be a bitmask
 		if($file->Flags === 1){ // no compression
-			$bytesWritten = \file_put_contents($dest, $content);
+			// nada
 		}
 		elseif($file->Flags === 3){ // deflate (probably unsed)
-			$bytesWritten = \file_put_contents($dest, \gzinflate($content));
+			$content = \gzinflate($content);
 		}
 		elseif($file->Flags === 5){ // lzma (requires ext-xz)
 			// https://bitbucket.org/mugadr_m/wildstar-studio/issues/23
-			$content      = \substr($content, 0, 5).\pack('Q', $file->SizeUncompressed).\substr($content, 5);
-			$bytesWritten = \file_put_contents($dest, \xzdecode($content));
+			$content = \xzdecode(\substr($content, 0, 5).\pack('Q', $file->SizeUncompressed).\substr($content, 5));
 		}
 		else{
 			throw new WSDBException('invalid file flag');
 		}
 
-		if($bytesWritten !== $file->SizeUncompressed){
+		$bytesWritten = \file_put_contents($dest, $content);
+
+		if($bytesWritten === false){
+			$this->errors[$file->Hash] = $file;
+			$this->logger->error('error writing '.$dest);
+
+		}
+		elseif($bytesWritten !== $file->SizeUncompressed){
 			$this->warnings[$file->Hash] = $file;
 			// throw new WSDBException
 			$this->logger->warning('size discrepancy for '.$dest.', expected '.$file->SizeUncompressed.' got '.$bytesWritten);
 		}
 
-		$this->logger->info('extracted: '.$dest.' ('.$bytesWritten.')');
+		$this->logger->info('extracted: '.$dest.' ('.$bytesWritten.' bytes)');
 	}
 
 }
