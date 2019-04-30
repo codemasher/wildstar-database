@@ -113,6 +113,7 @@ class ArchiveExtractor implements LoggerAwareInterface{
 
 		$this->fh       = \fopen($this->archivepath.'.archive', 'rb');
 		$this->warnings = [];
+		$this->errors   = [];
 
 		foreach($this->AIDX->data as $item){
 			$this->read($item);

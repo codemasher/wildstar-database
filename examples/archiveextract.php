@@ -22,8 +22,10 @@ require_once __DIR__.'/common.php';
 $extractor = new ArchiveExtractor($logger);
 
 foreach(ArchiveExtractor::ARCHIVES as $archive){
-	$extractor->open('./WildStar/Patch/'.$archive.'.index');
-	$extractor->extract();
+	$extractor
+		->open('./WildStar/Patch/'.$archive.'.index')
+		->extract(__DIR__.'/'.$archive)
+	;
 
 	foreach($extractor->warnings as $file){
 		// handle warnings if necessary
