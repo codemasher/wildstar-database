@@ -30,7 +30,7 @@ class AIDXReader extends PACKReaderAbstract{
 		// get the root info block of the AIDX file (4+4+4+4 = 16 bytes)
 		$rootInfo = \unpack(
 			'a4ArchiveType/LVersion/LBuildnumber/LIndex',
-			\fread($this->fh, $this->blocktable[$this->header['RootInfoIndex']]['Size'])
+			\fread($this->fh, 16)
 		);
 
 		if($rootInfo['ArchiveType'] !== "\x58\x44\x49\x41"){ // XDIA
@@ -77,16 +77,18 @@ class AIDXReader extends PACKReaderAbstract{
 		// read the list of names from the remaining data
 		$names = \fread($this->fh, $blockInfo['Size'] - (\ftell($this->fh) - $blockInfo['Offset']));
 
-		// apply the names to each object in the block
-		$setnames = function(array &$arr) use ($names):void{
-			foreach($arr ?? [] as $i => $e){
-				$arr[$i]->Name = \DIRECTORY_SEPARATOR.
-					\substr($names, $e->NameOffset, \strpos($names, "\x00", $e->NameOffset) - $e->NameOffset);
-			}
+		$getname = function(ArchiveItemAbstract $e) use ($names){
+			return '/'.\substr($names, $e->NameOffset, \strpos($names, "\x00", $e->NameOffset) - $e->NameOffset);
 		};
 
-		$setnames($dirs);
-		$setnames($files);
+		// apply the names to each object in the block
+		foreach($dirs as $i => $e){
+			$dirs[$i]->Name = $getname($e);
+		}
+
+		foreach($files as $i => $e){
+			$files[$i]->Name = $getname($e);
+		}
 
 		// loop through the directory stucture recursively and add the block data
 		foreach($dirs as $i => $info){

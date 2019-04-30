@@ -22,7 +22,7 @@ class AARCReader extends PACKReaderAbstract{
 		// get the root info block of the AARC file (4+4+4+4 = 16 bytes)
 		$rootInfo = \unpack(
 			'a4ArchiveType/LVersion/LBlockcount/LIndex',
-			\fread($this->fh, $this->blocktable[$this->header['RootInfoIndex']]['Size'])
+			\fread($this->fh, 16)
 		);
 
 		if($rootInfo['ArchiveType'] !== "\x43\x52\x41\x41"){ // CRAA
@@ -36,7 +36,7 @@ class AARCReader extends PACKReaderAbstract{
 
 		// read the data block info (4+20+8 = 32 bytes)
 		for($i = 0; $i < $rootInfo['Blockcount']; $i++){
-			$data = unpack('LIndex/a20Hash/QSizeUncompressed', \fread($this->fh, 32));
+			$data = unpack('LIndex/a20Hash/QSizeCompressed', \fread($this->fh, 32));
 			$hash = \bin2hex($data['Hash']);
 			unset($data['Hash']);
 			$this->data[$hash] = $data;

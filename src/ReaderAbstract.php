@@ -91,8 +91,8 @@ abstract class ReaderAbstract implements ReaderInterface, LoggerAwareInterface{
 	 * @return void
 	 */
 	public function __destruct(){
-		$this->logger->info('memory usage: '.(\memory_get_usage(true)/1048576).'MB');
-		$this->logger->info('peak memory usage: '.(\memory_get_peak_usage(true)/1048576).'MB');
+		$this->logger->info('memory usage: '.round(\memory_get_usage(true)/1048576, 3).'MB');
+		$this->logger->info('peak memory usage: '.round(\memory_get_peak_usage(true)/1048576, 3).'MB');
 
 		$this->close();
 	}
