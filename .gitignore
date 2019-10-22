@@ -2,3 +2,5 @@ vendor
 .idea
 composer.lock
 config/.env
+.vagrant
+ubuntu-bionic-18.04-cloudimg-console.log
