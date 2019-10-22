@@ -14,13 +14,14 @@ use Throwable;
 
 /** @var \chillerlan\Database\Database $db */
 /** @var \Psr\Log\LoggerInterface $logger */
+/** @var string $wildstar_path */
 
 require_once __DIR__.'/common.php';
 
 $reader = new LTEXReader($logger);
 
 foreach(['DE' => 'de-DE', 'EN' => 'en-US', 'FR' => 'fr-FR'] as $dir => $lang){
-	$file  = '/wildstar/Patch/ClientData'.$dir.'/'.$lang.'.bin';
+	$file  = $wildstar_path.'/Patch/ClientData'.$dir.'/'.$lang.'.bin';
 	$table = 'LocalizedText_'.$lang;
 
 	try{

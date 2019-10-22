@@ -12,6 +12,7 @@ namespace codemasher\WildstarDBExamples;
 use codemasher\WildstarDB\Archive\Extractor;
 
 /** @var \Psr\Log\LoggerInterface $logger */
+/** @var string $wildstar_path */
 
 require_once __DIR__.'/common.php';
 
@@ -20,7 +21,7 @@ $extractor = new Extractor($logger);
 foreach(Extractor::ARCHIVES as $archive){
 
 	$extractor
-		->open('/wildstar/Patch/'.$archive.'.index')
+		->open($wildstar_path.'/Patch/'.$archive.'.index')
 		->extract('/vagrant/WildStar')
 	;
 

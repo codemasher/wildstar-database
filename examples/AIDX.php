@@ -13,6 +13,7 @@ use codemasher\WildstarDB\Archive\AIDXReader;
 use Throwable;
 
 /** @var \Psr\Log\LoggerInterface $logger */
+/** @var string $wildstar_path */
 
 require_once __DIR__.'/common.php';
 
@@ -22,7 +23,7 @@ foreach(['ClientData', 'ClientDataDE', 'ClientDataEN', 'ClientDataFR', 'Client64
 
 	try{
 		$reader
-			->read('/wildstar/Patch/'.$index.'.index')
+			->read($wildstar_path.'/Patch/'.$index.'.index')
 			->toJSON(__DIR__.'/'.$index.'.index.json', JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES)
 		;
 	}

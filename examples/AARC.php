@@ -14,6 +14,7 @@ use codemasher\WildstarDB\Archive\{AARCReader, Extractor};
 use Throwable;
 
 /** @var \Psr\Log\LoggerInterface $logger */
+/** @var string $wildstar_path */
 
 require_once __DIR__.'/common.php';
 
@@ -23,7 +24,7 @@ foreach(Extractor::ARCHIVES as $index){
 
 	try{
 		$reader
-			->read('/wildstar/Patch/'.$index.'.archive')
+			->read($wildstar_path.'/Patch/'.$index.'.archive')
 			->toJSON(__DIR__.'/'.$index.'.archive.json', JSON_PRETTY_PRINT)
 		;
 	}

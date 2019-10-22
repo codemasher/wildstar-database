@@ -18,9 +18,11 @@ use function date, mb_internal_encoding, sprintf, substr, trim;
 
 mb_internal_encoding('UTF-8');
 
-require_once '/vagrant/vendor/autoload.php';
+require_once __DIR__.'/../vendor/autoload.php';
 
-$env = (new DotEnv('/vagrant/config', '.env', false))->load();
+$wildstar_path = '/wildstar';
+
+$env = (new DotEnv(__DIR__.'/../config', '.env', false))->load();
 
 $o = [
 	// DatabaseOptions

@@ -14,11 +14,12 @@ use DirectoryIterator, Throwable;
 
 /** @var \chillerlan\Database\Database $db */
 /** @var \Psr\Log\LoggerInterface $logger */
+/** @var string $wildstar_path */
 
 require_once __DIR__.'/common.php';
 
 $reader   = new DTBLReader($logger);
-$iterator = new DirectoryIterator('/wildstar/Patch/ClientData/DB');
+$iterator = new DirectoryIterator($wildstar_path.'/Patch/ClientData/DB');
 
 foreach($iterator as $finfo){
 
