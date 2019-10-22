@@ -27,7 +27,7 @@ final class AIDXReader extends PACKReaderAbstract{
 	private const AIDX_DATA = 'LNameOffset/LFlags/QFiletime/QSizeUncompressed/QSizeCompressed/a20Hash/x4';
 
 	/** @var array */
-	private $dirs;
+	protected $dirs;
 
 	/**
 	 * @inheritDoc

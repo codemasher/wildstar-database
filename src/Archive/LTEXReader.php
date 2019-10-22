@@ -45,7 +45,7 @@ final class LTEXReader extends ReaderAbstract{
 	/**
 	 * @var string
 	 */
-	private $prettyname;
+	protected $prettyname;
 
 	/**
 	 * @param string $filename
