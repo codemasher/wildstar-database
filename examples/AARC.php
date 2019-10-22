@@ -13,10 +13,12 @@ namespace codemasher\WildstarDBExamples;
 use codemasher\WildstarDB\Archive\{AARCReader, Extractor};
 use Throwable;
 
-/** @var \Psr\Log\LoggerInterface $logger */
-/** @var string $wildstar_path */
-
 require_once __DIR__.'/common.php';
+
+/**
+ * @var \Psr\Log\LoggerInterface $logger
+ * @var string $wildstar_path
+ */
 
 $reader = new AARCReader($logger);
 
