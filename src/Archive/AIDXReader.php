@@ -6,13 +6,15 @@
  *
  * @filesource   AIDXReader.php
  * @created      06.01.2019
- * @package      codemasher\WildstarDB
+ * @package      codemasher\WildstarDB\Archive
  * @author       smiley <smiley@chillerlan.net>
  * @copyright    2019 smiley
  * @license      MIT
  */
 
-namespace codemasher\WildstarDB;
+namespace codemasher\WildstarDB\Archive;
+
+use codemasher\WildstarDB\WSDBException;
 
 use function array_fill, array_merge, fread, fseek, ftell, strpos, substr, unpack;
 
@@ -65,18 +67,18 @@ class AIDXReader extends PACKReaderAbstract{
 
 		// create a directory object for each dir (4+4 = 8 bytes)
 		foreach($dirs as $i => $_){
-			$dirs[$i] = new ArchiveDirectory(unpack('LNameOffset/LBlockIndex', fread($this->fh, 8)), $parent);
+			$dirs[$i] = new Directory(unpack('LNameOffset/LBlockIndex', fread($this->fh, 8)), $parent);
 		}
 
 		// create a file object for each file (4+4+8+8+8+20+4 = 56 bytes)
 		foreach($files as $i => $_){
-			$files[$i] = new ArchiveFile(unpack($this::AIDX_DATA, fread($this->fh, 56)), $parent);
+			$files[$i] = new File(unpack($this::AIDX_DATA, fread($this->fh, 56)), $parent);
 		}
 
 		// read the list of names from the remaining data
 		$names = fread($this->fh, $blockInfo['Size'] - (ftell($this->fh) - $blockInfo['Offset']));
 
-		$getname = function(ArchiveItemAbstract $e) use ($names){
+		$getname = function(ItemAbstract $e) use ($names){
 			return '/'.substr($names, $e->NameOffset, strpos($names, "\x00", $e->NameOffset) - $e->NameOffset);
 		};
 

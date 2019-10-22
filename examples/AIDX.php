@@ -9,7 +9,7 @@
 
 namespace codemasher\WildstarDBExamples;
 
-use codemasher\WildstarDB\AIDXReader;
+use codemasher\WildstarDB\Archive\AIDXReader;
 use Throwable;
 
 /** @var \Psr\Log\LoggerInterface $logger */

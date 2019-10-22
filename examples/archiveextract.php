@@ -9,15 +9,15 @@
 
 namespace codemasher\WildstarDBExamples;
 
-use codemasher\WildstarDB\ArchiveExtractor;
+use codemasher\WildstarDB\Archive\Extractor;
 
 /** @var \Psr\Log\LoggerInterface $logger */
 
 require_once __DIR__.'/common.php';
 
-$extractor = new ArchiveExtractor($logger);
+$extractor = new Extractor($logger);
 
-foreach(ArchiveExtractor::ARCHIVES as $archive){
+foreach(Extractor::ARCHIVES as $archive){
 
 	$extractor
 		->open('/wildstar/Patch/'.$archive.'.index')

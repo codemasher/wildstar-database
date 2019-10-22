@@ -10,7 +10,7 @@
 
 namespace codemasher\WildstarDBExamples;
 
-use codemasher\WildstarDB\{AARCReader, ArchiveExtractor};
+use codemasher\WildstarDB\Archive\{AARCReader, Extractor};
 use Throwable;
 
 /** @var \Psr\Log\LoggerInterface $logger */
@@ -19,7 +19,7 @@ require_once __DIR__.'/common.php';
 
 $reader = new AARCReader($logger);
 
-foreach(ArchiveExtractor::ARCHIVES as $index){
+foreach(Extractor::ARCHIVES as $index){
 
 	try{
 		$reader

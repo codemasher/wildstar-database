@@ -12,9 +12,14 @@
  * @license      MIT
  */
 
-namespace codemasher\WildstarDB;
+namespace codemasher\WildstarDB\Archive;
 
-use function array_fill, fread, fseek, ftell, unpack;
+use codemasher\WildstarDB\WSDBException;
+use function array_fill;
+use function fread;
+use function fseek;
+use function ftell;
+use function unpack;
 
 /**
  * @property string $prettyname
@@ -33,7 +38,9 @@ class LTEXReader extends ReaderAbstract{
 	 * @var string
 	 * @internal
 	 */
-	protected $FORMAT_HEADER = 'a4Signature/LVersion/LLanguage/LLCID/QTagNameStringLength/QTagNameStringPtr/QShortNameStringLength/QShortNameStringPtr/QLongNameStringLength/QLongNameStringPtr/QEntryCount/QEntryIndexPtr/QNameStoreLength/QNameStorePtr';
+	protected $FORMAT_HEADER = 'a4Signature/LVersion/LLanguage/LLCID/QTagNameStringLength/QTagNameStringPtr'.
+	                           '/QShortNameStringLength/QShortNameStringPtr/QLongNameStringLength/QLongNameStringPtr'.
+	                           '/QEntryCount/QEntryIndexPtr/QNameStoreLength/QNameStorePtr';
 
 	/**
 	 * @var string
@@ -43,7 +50,7 @@ class LTEXReader extends ReaderAbstract{
 	/**
 	 * @param string $filename
 	 *
-	 * @return \codemasher\WildstarDB\ReaderInterface
+	 * @return \codemasher\WildstarDB\Archive\ReaderInterface
 	 * @throws \codemasher\WildstarDB\WSDBException
 	 */
 	public function read(string $filename):ReaderInterface{

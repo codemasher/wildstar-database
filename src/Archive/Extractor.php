@@ -1,6 +1,6 @@
 <?php
 /**
- * Class ArchiveExtractor
+ * Class Extractor
  *
  * @link         https://github.com/codemasher/php-xz REQUIRED! ext-xz to decompress lzma
  * @link         https://github.com/hcs64/ww2ogg (.wem audio to ogg vorbis)
@@ -15,16 +15,17 @@
  * @link         https://github.com/Taggrin/WildStar-MapMerger/blob/master/mapmerger.py
  * @link         https://github.com/Prior99/wildstar-map
  *
- * @filesource   ArchiveExtractor.php
+ * @filesource   Extractor.php
  * @created      28.04.2019
- * @package      codemasher\WildstarDB
+ * @package      codemasher\WildstarDB\Archive
  * @author       smiley <smiley@chillerlan.net>
  * @copyright    2019 smiley
  * @license      MIT
  */
 
-namespace codemasher\WildstarDB;
+namespace codemasher\WildstarDB\Archive;
 
+use codemasher\WildstarDB\WSDBException;
 use Psr\Log\{LoggerAwareInterface, LoggerAwareTrait, LoggerInterface, NullLogger};
 
 use function basename, dirname, extension_loaded, fclose, file_exists, file_put_contents, fopen, fread, fseek,
@@ -33,15 +34,15 @@ use function basename, dirname, extension_loaded, fclose, file_exists, file_put_
 
 use const DIRECTORY_SEPARATOR;
 
-class ArchiveExtractor implements LoggerAwareInterface{
+class Extractor implements LoggerAwareInterface{
 
 	use LoggerAwareTrait;
 
 	public const ARCHIVES = ['ClientData', 'ClientDataDE', 'ClientDataEN', 'ClientDataFR'];
 
-	/** @var \codemasher\WildstarDB\AIDXReader */
+	/** @var \codemasher\WildstarDB\Archive\AIDXReader */
 	protected $AIDX;
-	/** @var \codemasher\WildstarDB\AARCReader */
+	/** @var \codemasher\WildstarDB\Archive\AARCReader */
 	protected $AARC;
 	/** @var string */
 	protected $archivepath;
@@ -49,13 +50,13 @@ class ArchiveExtractor implements LoggerAwareInterface{
 	protected $archivename;
 	/** @var string */
 	protected $destination;
-	/** @var \codemasher\WildstarDB\ArchiveFile[] */
+	/** @var \codemasher\WildstarDB\Archive\File[] */
 	public $errors;
-	/** @var \codemasher\WildstarDB\ArchiveFile[] */
+	/** @var \codemasher\WildstarDB\Archive\File[] */
 	public $warnings;
 
 	/**
-	 * ArchiveExtractor constructor.
+	 * Extractor constructor.
 	 *
 	 * @param \Psr\Log\LoggerInterface $logger
 	 *
@@ -78,10 +79,10 @@ class ArchiveExtractor implements LoggerAwareInterface{
 	/**
 	 * @param string $index
 	 *
-	 * @return \codemasher\WildstarDB\ArchiveExtractor
+	 * @return \codemasher\WildstarDB\Archive\Extractor
 	 * @throws \codemasher\WildstarDB\WSDBException
 	 */
-	public function open(string $index):ArchiveExtractor{
+	public function open(string $index):Extractor{
 		$this->archivename = str_replace(['.index', '.archive'], '', basename($index));
 
 		if(!in_array($this->archivename, $this::ARCHIVES)){
@@ -99,10 +100,10 @@ class ArchiveExtractor implements LoggerAwareInterface{
 	/**
 	 * @param string|null $destination
 	 *
-	 * @return \codemasher\WildstarDB\ArchiveExtractor
+	 * @return \codemasher\WildstarDB\Archive\Extractor
 	 * @throws \codemasher\WildstarDB\WSDBException
 	 */
-	public function extract(string $destination = null):ArchiveExtractor{
+	public function extract(string $destination = null):Extractor{
 		$this->destination = rtrim($destination ?? $this->archivepath, '\\/');
 
 		// does the destination parent exist?
@@ -135,13 +136,13 @@ class ArchiveExtractor implements LoggerAwareInterface{
 	}
 
 	/**
-	 * @param \codemasher\WildstarDB\ArchiveItemAbstract $item
+	 * @param \codemasher\WildstarDB\Archive\ItemAbstract $item
 	 *
 	 * @return void
 	 */
-	protected function read(ArchiveItemAbstract $item):void{
+	protected function read(ItemAbstract $item):void{
 
-		if($item instanceof ArchiveDirectory){
+		if($item instanceof Directory){
 
 			foreach($item->Content as $dir){
 
@@ -154,7 +155,7 @@ class ArchiveExtractor implements LoggerAwareInterface{
 
 			return;
 		}
-		/** @var \codemasher\WildstarDB\ArchiveFile $item */
+		/** @var \codemasher\WildstarDB\Archive\File $item */
 		$this->extractFile($item);
 
 		gc_collect_cycles();
@@ -162,9 +163,9 @@ class ArchiveExtractor implements LoggerAwareInterface{
 	}
 
 	/**
-	 * @param \codemasher\WildstarDB\ArchiveFile $file
+	 * @param \codemasher\WildstarDB\Archive\File $file
 	 */
-	protected function extractFile(ArchiveFile $file):void{
+	protected function extractFile(File $file):void{
 		$dest = $this->destination.$file->Parent.$file->Name;
 
 		if(file_exists($dest)){ // @todo: overwrite option
@@ -196,14 +197,14 @@ class ArchiveExtractor implements LoggerAwareInterface{
 	}
 
 	/**
-	 * @param \codemasher\WildstarDB\ArchiveFile $file
-	 * @param int                                $offset
-	 * @param int                                $size
+	 * @param \codemasher\WildstarDB\Archive\File $file
+	 * @param int                                 $offset
+	 * @param int                                 $size
 	 *
 	 * @return string
 	 * @throws \codemasher\WildstarDB\WSDBException
 	 */
-	protected function getContent(ArchiveFile $file, int $offset, int $size):string{
+	protected function getContent(File $file, int $offset, int $size):string{
 		// slower but probably more memory efficient (it'll blow up either way)
 		$fh = fopen($this->archivepath.'.archive', 'rb');
 		fseek($fh, $offset);

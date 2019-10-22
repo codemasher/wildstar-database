@@ -7,15 +7,18 @@
  *
  * @filesource   DTBLReader.php
  * @created      04.01.2019
- * @package      codemasher\WildstarDB
+ * @package      codemasher\WildstarDB\Archive
  * @author       smiley <smiley@chillerlan.net>
  * @copyright    2019 smiley
  * @license      MIT
  */
 
-namespace codemasher\WildstarDB;
+namespace codemasher\WildstarDB\Archive;
+
+use codemasher\WildstarDB\WSDBException;
 
 use function array_fill, count, fread, fseek, ftell, round, substr, unpack;
+use function codemasher\WildstarDB\{float, uint32, uint64};
 
 class DTBLReader extends ReaderAbstract{
 
@@ -23,7 +26,8 @@ class DTBLReader extends ReaderAbstract{
 	 * @var string
 	 * @internal
 	 */
-	protected $FORMAT_HEADER = 'a4Signature/LVersion/QTableNameLength/x8/QRecordSize/QFieldCount/QDescriptionOffset/QRecordCount/QFullRecordSize/QEntryOffset/QNextId/QIDLookupOffset/x8';
+	protected $FORMAT_HEADER = 'a4Signature/LVersion/QTableNameLength/x8/QRecordSize/QFieldCount/QDescriptionOffset'.
+	                           '/QRecordCount/QFullRecordSize/QEntryOffset/QNextId/QIDLookupOffset/x8';
 
 	/**
 	 * @var bool
@@ -46,7 +50,7 @@ class DTBLReader extends ReaderAbstract{
 	/**
 	 * @param string $filename
 	 *
-	 * @return \codemasher\WildstarDB\ReaderInterface
+	 * @return \codemasher\WildstarDB\Archive\ReaderInterface
 	 * @throws \codemasher\WildstarDB\WSDBException
 	 */
 	public function read(string $filename):ReaderInterface{

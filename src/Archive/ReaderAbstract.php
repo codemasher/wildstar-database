@@ -4,15 +4,16 @@
  *
  * @filesource   ReaderAbstract.php
  * @created      05.01.2019
- * @package      codemasher\WildstarDB
+ * @package      codemasher\WildstarDB\Archive
  * @author       smiley <smiley@chillerlan.net>
  * @copyright    2019 smiley
  * @license      MIT
  */
 
-namespace codemasher\WildstarDB;
+namespace codemasher\WildstarDB\Archive;
 
 use chillerlan\Database\Database;
+use codemasher\WildstarDB\WSDBException;
 use Psr\Log\{LoggerAwareInterface, LoggerAwareTrait, LoggerInterface, NullLogger};
 use SimpleXMLElement;
 
@@ -104,7 +105,7 @@ abstract class ReaderAbstract implements ReaderInterface, LoggerAwareInterface{
 	}
 
 	/**
-	 * @return \codemasher\WildstarDB\ReaderInterface
+	 * @return \codemasher\WildstarDB\Archive\ReaderInterface
 	 */
 	public function close():ReaderInterface{
 
@@ -283,7 +284,7 @@ abstract class ReaderAbstract implements ReaderInterface, LoggerAwareInterface{
 	/**
 	 * @param \chillerlan\Database\Database $db
 	 *
-	 * @return \codemasher\WildstarDB\ReaderInterface
+	 * @return \codemasher\WildstarDB\Archive\ReaderInterface
 	 */
 	public function toDB(Database $db):ReaderInterface{
 		// Windows: https://dev.mysql.com/doc/refman/8.0/en/server-system-variables.html#sysvar_lower_case_table_names

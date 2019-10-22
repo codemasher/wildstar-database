@@ -1,18 +1,18 @@
 <?php
 /**
- * Class ArchiveItemAbstract
+ * Class ItemAbstract
  *
- * @filesource   ArchiveItemAbstract.php
+ * @filesource   ItemAbstract.php
  * @created      28.04.2019
- * @package      codemasher\WildstarDB
+ * @package      codemasher\WildstarDB\Archive
  * @author       smiley <smiley@chillerlan.net>
  * @copyright    2019 smiley
  * @license      MIT
  */
 
-namespace codemasher\WildstarDB;
+namespace codemasher\WildstarDB\Archive;
 
-abstract class ArchiveItemAbstract{
+abstract class ItemAbstract{
 
 	public $Parent;
 	public $Name;

@@ -1,20 +1,20 @@
 <?php
 /**
- * Class ArchiveFile
+ * Class File
  *
- * @filesource   ArchiveFile.php
+ * @filesource   File.php
  * @created      28.04.2019
- * @package      codemasher\WildstarDB
+ * @package      codemasher\WildstarDB\Archive
  * @author       smiley <smiley@chillerlan.net>
  * @copyright    2019 smiley
  * @license      MIT
  */
 
-namespace codemasher\WildstarDB;
+namespace codemasher\WildstarDB\Archive;
 
 use function bin2hex;
 
-class ArchiveFile extends ArchiveItemAbstract{
+class File extends ItemAbstract{
 
 	public $Flags;
 	public $Filetime;

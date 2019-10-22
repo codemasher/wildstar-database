@@ -1,18 +1,18 @@
 <?php
 /**
- * Class ArchiveDirectory
+ * Class Directory
  *
- * @filesource   ArchiveDirectory.php
+ * @filesource   Directory.php
  * @created      28.04.2019
- * @package      codemasher\WildstarDB
+ * @package      codemasher\WildstarDB\Archive
  * @author       smiley <smiley@chillerlan.net>
  * @copyright    2019 smiley
  * @license      MIT
  */
 
-namespace codemasher\WildstarDB;
+namespace codemasher\WildstarDB\Archive;
 
-class ArchiveDirectory extends ArchiveItemAbstract{
+class Directory extends ItemAbstract{
 
 	public $BlockIndex;
 	public $Content;

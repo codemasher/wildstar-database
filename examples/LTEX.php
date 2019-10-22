@@ -9,7 +9,7 @@
 
 namespace codemasher\WildstarDBExamples;
 
-use codemasher\WildstarDB\LTEXReader;
+use codemasher\WildstarDB\Archive\LTEXReader;
 use Throwable;
 
 /** @var \chillerlan\Database\Database $db */

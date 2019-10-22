@@ -4,13 +4,13 @@
  *
  * @filesource   ReaderInterface.php
  * @created      05.01.2019
- * @package      codemasher\WildstarDB
+ * @package      codemasher\WildstarDB\Archive
  * @author       smiley <smiley@chillerlan.net>
  * @copyright    2019 smiley
  * @license      MIT
  */
 
-namespace codemasher\WildstarDB;
+namespace codemasher\WildstarDB\Archive;
 
 use chillerlan\Database\Database;
 
@@ -26,7 +26,7 @@ interface ReaderInterface{
 	/**
 	 * @param string $filename
 	 *
-	 * @return \codemasher\WildstarDB\ReaderInterface
+	 * @return \codemasher\WildstarDB\Archive\ReaderInterface
 	 * @throws \codemasher\WildstarDB\WSDBException
 	 */
 	public function read(string $filename):ReaderInterface;

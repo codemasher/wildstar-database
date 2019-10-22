@@ -4,15 +4,16 @@
  *
  * @filesource   PACKReaderAbstract.php
  * @created      27.04.2019
- * @package      codemasher\WildstarDB
+ * @package      codemasher\WildstarDB\Archive
  * @author       smiley <smiley@chillerlan.net>
  * @copyright    2019 smiley
  * @license      MIT
  */
 
-namespace codemasher\WildstarDB;
+namespace codemasher\WildstarDB\Archive;
 
 use chillerlan\Database\Database;
+use codemasher\WildstarDB\WSDBException;
 
 use function fread, fseek, unpack;
 
@@ -49,7 +50,7 @@ abstract class PACKReaderAbstract extends ReaderAbstract{
 	/**
 	 * @param string $filename
 	 *
-	 * @return \codemasher\WildstarDB\ReaderInterface
+	 * @return \codemasher\WildstarDB\Archive\ReaderInterface
 	 * @throws \codemasher\WildstarDB\WSDBException
 	 */
 	public function read(string $filename):ReaderInterface{
@@ -109,7 +110,7 @@ abstract class PACKReaderAbstract extends ReaderAbstract{
 	/**
 	 * @param \chillerlan\Database\Database $db
 	 *
-	 * @return \codemasher\WildstarDB\ReaderInterface
+	 * @return \codemasher\WildstarDB\Archive\ReaderInterface
 	 * @throws \codemasher\WildstarDB\WSDBException
 	 */
 	public function toDB(Database $db):ReaderInterface{

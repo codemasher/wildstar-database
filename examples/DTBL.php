@@ -9,7 +9,7 @@
 
 namespace codemasher\WildstarDBExamples;
 
-use codemasher\WildstarDB\DTBLReader;
+use codemasher\WildstarDB\Archive\DTBLReader;
 use DirectoryIterator, Throwable;
 
 /** @var \chillerlan\Database\Database $db */
