@@ -14,10 +14,19 @@ namespace codemasher\WildstarDB\Archive;
 
 abstract class ItemAbstract{
 
+	/** @var string */
 	public $Parent;
+	/** @var string */
 	public $Name;
+	/** @var int */
 	public $NameOffset;
 
+	/**
+	 * ItemAbstract constructor.
+	 *
+	 * @param array  $data
+	 * @param string $parent
+	 */
 	public function __construct(array $data, string $parent){
 
 		foreach($data as $property => $value){

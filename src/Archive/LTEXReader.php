@@ -24,10 +24,10 @@ use function unpack;
 /**
  * @property string $prettyname
  */
-class LTEXReader extends ReaderAbstract{
+final class LTEXReader extends ReaderAbstract{
 
 	// https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-lcid/a9eac961-e77d-41a6-90a5-ce1a8b0cdb9c
-	protected const LCID = [
+	private const LCID = [
 		0x0407 => 'de-DE', // 1031
 		0x0409 => 'en-US', // 1033
 		0x040C => 'fr-FR', // 1036
@@ -45,7 +45,7 @@ class LTEXReader extends ReaderAbstract{
 	/**
 	 * @var string
 	 */
-	protected $prettyname;
+	private $prettyname;
 
 	/**
 	 * @param string $filename
@@ -79,7 +79,7 @@ class LTEXReader extends ReaderAbstract{
 	/**
 	 * @return void
 	 */
-	protected function readData():void{
+	private function readData():void{
 		fseek($this->fh, $this->headerSize + $this->header['EntryIndexPtr']);
 
 		$this->data = array_fill(0, $this->header['EntryCount'], null);

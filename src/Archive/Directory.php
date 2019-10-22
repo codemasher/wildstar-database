@@ -12,9 +12,11 @@
 
 namespace codemasher\WildstarDB\Archive;
 
-class Directory extends ItemAbstract{
+final class Directory extends ItemAbstract{
 
+	/** @var int */
 	public $BlockIndex;
+	/** @var array */
 	public $Content;
 
 }

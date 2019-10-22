@@ -14,15 +14,27 @@ namespace codemasher\WildstarDB\Archive;
 
 use function bin2hex;
 
-class File extends ItemAbstract{
+final class File extends ItemAbstract{
 
+	/** @var int */
 	public $Flags;
+	/** @var int */
 	public $Filetime;
+	/** @var int */
 	public $FileUtime;
+	/** @var int */
 	public $SizeUncompressed;
+	/** @var int */
 	public $SizeCompressed;
+	/** @var string */
 	public $Hash;
 
+	/**
+	 * File constructor.
+	 *
+	 * @param array  $data
+	 * @param string $parent
+	 */
 	public function __construct(array $data, string $parent){
 		parent::__construct($data, $parent);
 

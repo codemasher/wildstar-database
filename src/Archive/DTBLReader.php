@@ -20,7 +20,7 @@ use codemasher\WildstarDB\WSDBException;
 use function array_fill, count, fread, fseek, ftell, round, substr, unpack;
 use function codemasher\WildstarDB\{float, uint32, uint64};
 
-class DTBLReader extends ReaderAbstract{
+final class DTBLReader extends ReaderAbstract{
 
 	/**
 	 * @var string
@@ -33,19 +33,19 @@ class DTBLReader extends ReaderAbstract{
 	 * @var bool
 	 * @internal
 	 */
-	protected $skip;
+	private $skip;
 
 	/**
 	 * @var int
 	 * @internal
 	 */
-	protected $pos;
+	private $pos;
 
 	/**
 	 * @var string
 	 * @internal
 	 */
-	protected $rowdata;
+	private $rowdata;
 
 	/**
 	 * @param string $filename
@@ -73,7 +73,7 @@ class DTBLReader extends ReaderAbstract{
 	/**
 	 * @return void
 	 */
-	protected function readColumnHeaders():void{
+	private function readColumnHeaders():void{
 
 		// table name (UTF-16LE: length *2)
 		$this->name = $this->decodeString(fread($this->fh, $this->header['TableNameLength'] * 2));
@@ -107,7 +107,7 @@ class DTBLReader extends ReaderAbstract{
 	 * @return void
 	 * @throws \codemasher\WildstarDB\WSDBException
 	 */
-	protected function readData():void{
+	private function readData():void{
 		fseek($this->fh, $this->header['EntryOffset'] + $this->headerSize);
 
 		$this->data = array_fill(0, $this->header['RecordCount'], null);
@@ -143,7 +143,7 @@ class DTBLReader extends ReaderAbstract{
 	 *
 	 * @return int|float|string|null
 	 */
-	protected function getValue(int $datatype){
+	private function getValue(int $datatype){
 
 		switch($datatype){
 			case 3:  // uint32
@@ -174,7 +174,7 @@ class DTBLReader extends ReaderAbstract{
 	/**
 	 * @return string
 	 */
-	protected function readString():string{
+	private function readString():string{
 		$o          = uint32(substr($this->rowdata, $this->pos, 4));
 		$p          = ftell($this->fh);
 		$this->skip = $o === 0;

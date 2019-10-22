@@ -21,13 +21,13 @@ use function array_fill, array_merge, fread, fseek, ftell, strpos, substr, unpac
 /**
  * @property array $dirs
  */
-class AIDXReader extends PACKReaderAbstract{
+final class AIDXReader extends PACKReaderAbstract{
 
-	protected const AIDX_ROOT = 'a4ArchiveType/LVersion/LBuildnumber/LIndex';
-	protected const AIDX_DATA = 'LNameOffset/LFlags/QFiletime/QSizeUncompressed/QSizeCompressed/a20Hash/x4';
+	private const AIDX_ROOT = 'a4ArchiveType/LVersion/LBuildnumber/LIndex';
+	private const AIDX_DATA = 'LNameOffset/LFlags/QFiletime/QSizeUncompressed/QSizeCompressed/a20Hash/x4';
 
 	/** @var array */
-	protected $dirs;
+	private $dirs;
 
 	/**
 	 * @inheritDoc
@@ -51,7 +51,7 @@ class AIDXReader extends PACKReaderAbstract{
 	 *
 	 * @return array
 	 */
-	protected function getBlock(array $blockInfo, string $parent = ''):array{
+	private function getBlock(array $blockInfo, string $parent = ''):array{
 
 		// add the current path to the collection
 		$this->dirs[] = $parent;

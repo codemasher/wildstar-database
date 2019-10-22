@@ -16,10 +16,10 @@ use codemasher\WildstarDB\WSDBException;
 
 use function bin2hex, fread, fseek, unpack;
 
-class AARCReader extends PACKReaderAbstract{
+final class AARCReader extends PACKReaderAbstract{
 
-	protected const AARC_ROOT = 'a4ArchiveType/LVersion/LBlockcount/LIndex';
-	protected const AARC_DATA = 'LIndex/a20Hash/QSizeCompressed';
+	private const AARC_ROOT = 'a4ArchiveType/LVersion/LBlockcount/LIndex';
+	private const AARC_DATA = 'LIndex/a20Hash/QSizeCompressed';
 
 	/**
 	 * @inheritDoc

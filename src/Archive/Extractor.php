@@ -35,7 +35,6 @@ use function basename, dirname, extension_loaded, fclose, file_exists, file_put_
 use const DIRECTORY_SEPARATOR;
 
 class Extractor implements LoggerAwareInterface{
-
 	use LoggerAwareTrait;
 
 	public const ARCHIVES = ['ClientData', 'ClientDataDE', 'ClientDataEN', 'ClientDataFR'];
