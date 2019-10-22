@@ -2,11 +2,18 @@
 /**
  * Class ArchiveExtractor
  *
- * @link https://github.com/codemasher/php-xz REQUIRED! ext-xz to decompress lzma
- * @link https://github.com/hcs64/ww2ogg (.wem audio to ogg vorbis)
- * @link https://github.com/Vextil/Wwise-Unpacker (.bnk, .wem)
- * @link https://github.com/hpxro7/wwiseutil (.bnk GUI tool)
- * @link https://hcs64.com/vgm_ripping.html
+ * @link         https://github.com/codemasher/php-xz REQUIRED! ext-xz to decompress lzma
+ * @link         https://github.com/hcs64/ww2ogg (.wem audio to ogg vorbis)
+ * @link         https://github.com/Vextil/Wwise-Unpacker (.bnk, .wem)
+ * @link         https://github.com/hpxro7/wwiseutil (.bnk GUI tool)
+ * @link         https://hcs64.com/vgm_ripping.html
+ * @link         https://www.reddit.com/r/WildStar/comments/9efluz/wildstar_model_exporter/ (.m3)
+ * @link         https://pastebin.com/R72C8NgT (.tex)
+ *
+ * @link         https://arctium.io/wiki/index.php?title=File_Formats (gone???)
+ * @link         https://github.com/CucFlavius/WSEdit
+ * @link         https://github.com/Taggrin/WildStar-MapMerger/blob/master/mapmerger.py
+ * @link         https://github.com/Prior99/wildstar-map
  *
  * @filesource   ArchiveExtractor.php
  * @created      28.04.2019
@@ -20,7 +27,14 @@ namespace codemasher\WildstarDB;
 
 use Psr\Log\{LoggerAwareInterface, LoggerAwareTrait, LoggerInterface, NullLogger};
 
+use function basename, dirname, extension_loaded, fclose, file_exists, file_put_contents, fopen, fread, fseek,
+	gc_collect_cycles, gc_enable, gc_mem_caches, gzinflate, in_array, is_writable, mkdir, pack, rtrim, sha1,
+	sprintf, str_replace, substr, xzdecode;
+
+use const DIRECTORY_SEPARATOR;
+
 class ArchiveExtractor implements LoggerAwareInterface{
+
 	use LoggerAwareTrait;
 
 	public const ARCHIVES = ['ClientData', 'ClientDataDE', 'ClientDataEN', 'ClientDataFR'];
@@ -29,8 +43,6 @@ class ArchiveExtractor implements LoggerAwareInterface{
 	protected $AIDX;
 	/** @var \codemasher\WildstarDB\AARCReader */
 	protected $AARC;
-	/** @var resource */
-	protected $fh;
 	/** @var string */
 	protected $archivepath;
 	/** @var string */
@@ -51,7 +63,7 @@ class ArchiveExtractor implements LoggerAwareInterface{
 	 */
 	public function __construct(LoggerInterface $logger){
 
-		if(!\extension_loaded('xz')){
+		if(!extension_loaded('xz')){
 			throw new WSDBException('required extension xz missing!');
 		}
 
@@ -59,6 +71,8 @@ class ArchiveExtractor implements LoggerAwareInterface{
 
 		$this->AIDX = new AIDXReader($this->logger);
 		$this->AARC = new AARCReader($this->logger);
+
+		gc_enable();
 	}
 
 	/**
@@ -68,13 +82,13 @@ class ArchiveExtractor implements LoggerAwareInterface{
 	 * @throws \codemasher\WildstarDB\WSDBException
 	 */
 	public function open(string $index):ArchiveExtractor{
-		$this->archivename = \str_replace(['.index', '.archive'], '', \basename($index));
+		$this->archivename = str_replace(['.index', '.archive'], '', basename($index));
 
 		if(!in_array($this->archivename, $this::ARCHIVES)){
 			throw new WSDBException('invalid archive file (Steam Wildstar not supported)');
 		}
 
-		$this->archivepath = \dirname($index).\DIRECTORY_SEPARATOR.$this->archivename;
+		$this->archivepath = dirname($index).DIRECTORY_SEPARATOR.$this->archivename;
 
 		$this->AIDX->read($this->archivepath.'.index');
 		$this->AARC->read($this->archivepath.'.archive');
@@ -89,36 +103,33 @@ class ArchiveExtractor implements LoggerAwareInterface{
 	 * @throws \codemasher\WildstarDB\WSDBException
 	 */
 	public function extract(string $destination = null):ArchiveExtractor{
-		$this->destination = \rtrim($destination ?? $this->archivepath, '\\/');
+		$this->destination = rtrim($destination ?? $this->archivepath, '\\/');
 
 		// does the destination parent exist?
-		if(!$this->destination || !\file_exists(\dirname($this->destination))){
+		if(!$this->destination || !file_exists(dirname($this->destination))){
 			throw new WSDBException('invalid destination: '.$this->destination);
 		}
 
 		// destination does not exist?
-		if(!\file_exists($this->destination)){
+		if(!file_exists($this->destination)){
 			// is the parent writable?
-			if(!\is_writable(\dirname($this->destination))){
+			if(!is_writable(dirname($this->destination))){
 				throw new WSDBException('destination parent is not writable');
 			}
 			// create it
-			\mkdir($this->destination, 0777);
+			mkdir($this->destination, 0777);
 		}
 
 		// destination exists but isn't writable?
-		if(!\is_writable($this->destination)){
+		if(!is_writable($this->destination)){
 			throw new WSDBException('destination is not writable');
 		}
 
-		$this->fh       = \fopen($this->archivepath.'.archive', 'rb');
 		$this->warnings = [];
 
 		foreach($this->AIDX->data as $item){
 			$this->read($item);
 		}
-
-		\fclose($this->fh);
 
 		return $this;
 	}
@@ -133,10 +144,9 @@ class ArchiveExtractor implements LoggerAwareInterface{
 		if($item instanceof ArchiveDirectory){
 
 			foreach($item->Content as $dir){
-				$dest = $this->destination.$dir->Parent;
 
-				if(!\file_exists($dest)){
-					\mkdir($dest, 0777, true);
+				if(!file_exists($this->destination.$dir->Parent)){
+					mkdir($this->destination.$dir->Parent, 0777, true);
 				}
 
 				$this->read($dir);
@@ -146,61 +156,80 @@ class ArchiveExtractor implements LoggerAwareInterface{
 		}
 		/** @var \codemasher\WildstarDB\ArchiveFile $item */
 		$this->extractFile($item);
+
+		gc_collect_cycles();
+		gc_mem_caches();
 	}
 
 	/**
 	 * @param \codemasher\WildstarDB\ArchiveFile $file
-	 *
-	 * @throws \codemasher\WildstarDB\WSDBException
 	 */
 	protected function extractFile(ArchiveFile $file):void{
 		$dest = $this->destination.$file->Parent.$file->Name;
 
-		if(\file_exists($dest)){ // @todo: overwrite option
+		if(file_exists($dest)){ // @todo: overwrite option
 			$this->logger->notice('file already exists: '.$dest);
+
 			return;
 		}
 
-		$blockInfo = $this->AARC->data[$file->Hash];
-		$block     = $this->AARC->blocktable[$blockInfo['Index']];
-
-		\fseek($this->fh, $block['Offset']);
-		$content = \fread($this->fh, $block['Size']);
-
-		// hash the read data
-		if(\sha1($content) !== $file->Hash){
-			throw new WSDBException('corrupt data, invalid hash: '.\sha1($content).' (expected '.$file->Hash.' for '.$file->Name.')');
-		}
-
-		// $Flags is supposed to be a bitmask
-		if($file->Flags === 1){ // no compression
-			// nada
-		}
-		elseif($file->Flags === 3){ // deflate (probably unsed)
-			$content = \gzinflate($content);
-		}
-		elseif($file->Flags === 5){ // lzma (requires ext-xz)
-			// https://bitbucket.org/mugadr_m/wildstar-studio/issues/23
-			$content = \xzdecode(\substr($content, 0, 5).\pack('Q', $file->SizeUncompressed).\substr($content, 5));
-		}
-		else{
-			throw new WSDBException('invalid file flag');
-		}
-
-		$bytesWritten = \file_put_contents($dest, $content);
+		$block        = $this->AARC->blocktable[$this->AARC->data[$file->Hash]['Index']];
+		$bytesWritten = file_put_contents(
+			$dest,
+			$this->getContent($file, $block['Offset'], $block['Size'])
+		);
 
 		if($bytesWritten === false){
-			$this->errors[$file->Hash] = $file;
+#			$this->errors[$file->Hash] = $file;
 			$this->logger->error('error writing '.$dest);
 
 		}
 		elseif($bytesWritten !== $file->SizeUncompressed){
-			$this->warnings[$file->Hash] = $file;
+#			$this->warnings[$file->Hash] = $file;
 			// throw new WSDBException
-			$this->logger->warning('size discrepancy for '.$dest.', expected '.$file->SizeUncompressed.' got '.$bytesWritten);
+			$this->logger->warning(
+				sprintf('size discrepancy for %1$s, expected %2$s got %3$s', $dest, $file->SizeUncompressed, $bytesWritten)
+			);
 		}
 
 		$this->logger->info('extracted: '.$dest.' ('.$bytesWritten.' bytes)');
+	}
+
+	/**
+	 * @param \codemasher\WildstarDB\ArchiveFile $file
+	 * @param int                                $offset
+	 * @param int                                $size
+	 *
+	 * @return string
+	 * @throws \codemasher\WildstarDB\WSDBException
+	 */
+	protected function getContent(ArchiveFile $file, int $offset, int $size):string{
+		// slower but probably more memory efficient (it'll blow up either way)
+		$fh = fopen($this->archivepath.'.archive', 'rb');
+		fseek($fh, $offset);
+		$content = fread($fh, $size);
+		fclose($fh);
+
+		// hash the read data
+		if(sha1($content) !== $file->Hash){
+			throw new WSDBException(
+				sprintf('corrupt data, invalid hash: %1$s (expected %2$s for %3$s)', sha1($content), $file->Hash, $file->Name)
+			);
+		}
+
+		// $Flags is supposed to be a bitmask
+		if($file->Flags === 1){ // no compression
+			return $content;
+		}
+		elseif($file->Flags === 3){ // deflate (probably unsed)
+			return gzinflate($content);
+		}
+		elseif($file->Flags === 5){ // lzma (requires ext-xz)
+			// https://bitbucket.org/mugadr_m/wildstar-studio/issues/23
+			return xzdecode(substr($content, 0, 5).pack('Q', $file->SizeUncompressed).substr($content, 5));
+		}
+
+		throw new WSDBException('invalid file flag');
 	}
 
 }

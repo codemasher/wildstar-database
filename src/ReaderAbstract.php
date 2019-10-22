@@ -16,6 +16,12 @@ use chillerlan\Database\Database;
 use Psr\Log\{LoggerAwareInterface, LoggerAwareTrait, LoggerInterface, NullLogger};
 use SimpleXMLElement;
 
+use function array_column, array_values, count, dirname, fclose, file_put_contents, fopen, fputcsv, fread, is_file,
+	is_readable, is_resource, is_writable, json_encode, mb_convert_encoding, memory_get_peak_usage, memory_get_usage,
+	property_exists, realpath, rewind, stream_get_contents, strlen, trim, unpack;
+
+use const LIBXML_BIGLINES, PHP_INT_SIZE;
+
 /**
  * @property string $file
  * @property array  $header
@@ -80,7 +86,7 @@ abstract class ReaderAbstract implements ReaderInterface, LoggerAwareInterface{
 	 */
 	public function __construct(LoggerInterface $logger = null){
 
-		if(\PHP_INT_SIZE < 8){
+		if(PHP_INT_SIZE < 8){
 			throw new WSDBException('64-bit PHP required');
 		}
 
@@ -91,8 +97,8 @@ abstract class ReaderAbstract implements ReaderInterface, LoggerAwareInterface{
 	 * @return void
 	 */
 	public function __destruct(){
-		$this->logger->info('memory usage: '.round(\memory_get_usage(true)/1048576, 3).'MB');
-		$this->logger->info('peak memory usage: '.round(\memory_get_peak_usage(true)/1048576, 3).'MB');
+		$this->logger->info('memory usage: '.round(memory_get_usage(true) / 1048576, 3).'MB');
+		$this->logger->info('peak memory usage: '.round(memory_get_peak_usage(true) / 1048576, 3).'MB');
 
 		$this->close();
 	}
@@ -102,8 +108,8 @@ abstract class ReaderAbstract implements ReaderInterface, LoggerAwareInterface{
 	 */
 	public function close():ReaderInterface{
 
-		if(\is_resource($this->fh)){
-			\fclose($this->fh);
+		if(is_resource($this->fh)){
+			fclose($this->fh);
 
 			$this->fh = null;
 		}
@@ -123,7 +129,7 @@ abstract class ReaderAbstract implements ReaderInterface, LoggerAwareInterface{
 	 * @return mixed|null
 	 */
 	public function __get(string $name){
-		return \property_exists($this, $name) && $name !== 'fh' ? $this->{$name} : null;
+		return property_exists($this, $name) && $name !== 'fh' ? $this->{$name} : null;
 	}
 
 	/**
@@ -134,23 +140,23 @@ abstract class ReaderAbstract implements ReaderInterface, LoggerAwareInterface{
 	 */
 	protected function loadFile(string $filename):void{
 		$this->close();
-		$filename = \realpath($filename);
+#		$filename = realpath($filename);
 
-		if(!$filename || !\is_file($filename) || !\is_readable($filename)){
+		if(!$filename || !is_file($filename) || !is_readable($filename)){
 			throw new WSDBException('input file not readable');
 		}
 
 		$this->file = $filename;
-		$this->fh   = \fopen($this->file, 'rb');
-		$header     = \fread($this->fh, $this->headerSize);
+		$this->fh   = fopen($this->file, 'rb');
+		$header     = fread($this->fh, $this->headerSize);
 
 		$this->logger->info('loading: '.$this->file);
 
-		if(\strlen($header) !== $this->headerSize){
+		if(strlen($header) !== $this->headerSize){
 			throw new WSDBException('cannot read header');
 		}
 
-		$this->header = \unpack($this->FORMAT_HEADER, $header);
+		$this->header = unpack($this->FORMAT_HEADER, $header);
 	}
 
 	/**
@@ -159,7 +165,7 @@ abstract class ReaderAbstract implements ReaderInterface, LoggerAwareInterface{
 	 * @return string
 	 */
 	protected function decodeString(string $str):string{
-		return \trim(\mb_convert_encoding($str, 'UTF-8', 'UTF-16LE'));
+		return trim(mb_convert_encoding($str, 'UTF-8', 'UTF-16LE'));
 	}
 
 	/**
@@ -183,13 +189,13 @@ abstract class ReaderAbstract implements ReaderInterface, LoggerAwareInterface{
 	 */
 	protected function saveToFile(string $data, string $file):bool{
 
-		if(!\is_writable(\dirname($file))){
+		if(!is_writable(dirname($file))){
 			throw new WSDBException('cannot write data to file: '.$file.', target directory is not writable');
 		}
 
 		$this->logger->info('writing data to file: '.$file);
 
-		return (bool)\file_put_contents($file, $data);
+		return (bool)file_put_contents($file, $data);
 	}
 
 	/**
@@ -200,8 +206,7 @@ abstract class ReaderAbstract implements ReaderInterface, LoggerAwareInterface{
 	 */
 	public function toJSON(string $file = null, int $jsonOptions = 0):string{
 		$this->checkData();
-
-		$json = \json_encode($this->data, $jsonOptions);
+		$json = json_encode($this->data, $jsonOptions);
 
 		if($file !== null){
 			$this->saveToFile($json, $file);
@@ -221,19 +226,19 @@ abstract class ReaderAbstract implements ReaderInterface, LoggerAwareInterface{
 	public function toCSV(string $file = null, string $delimiter = ',', string $enclosure = '"', string $escapeChar = '\\'):string{
 		$this->checkData();
 
-		$mh = \fopen('php://memory', 'r+');
+		$mh = fopen('php://memory', 'r+');
 
-		\fputcsv($mh, \array_column($this->cols, 'name'), $delimiter, $enclosure, $escapeChar);
+		fputcsv($mh, array_column($this->cols, 'name'), $delimiter, $enclosure, $escapeChar);
 
 		foreach($this->data as $row){
-			\fputcsv($mh, \array_values($row), $delimiter, $enclosure, $escapeChar);
+			fputcsv($mh, array_values($row), $delimiter, $enclosure, $escapeChar);
 		}
 
-		\rewind($mh);
+		rewind($mh);
 
-		$csv = \stream_get_contents($mh);
+		$csv = stream_get_contents($mh);
 
-		\fclose($mh);
+		fclose($mh);
 
 		if($file !== null){
 			$this->saveToFile($csv, $file);
@@ -252,16 +257,16 @@ abstract class ReaderAbstract implements ReaderInterface, LoggerAwareInterface{
 	public function toXML(string $file = null):string{
 		$this->checkData();
 
-		$sxe   = new SimpleXMLElement('<?xml version="1.0" encoding="UTF-8"?><root></root>', \LIBXML_BIGLINES);
+		$sxe   = new SimpleXMLElement('<?xml version="1.0" encoding="UTF-8"?><root></root>', LIBXML_BIGLINES);
 		$types = [3 => 'uint32', 4 => 'float', 11 => 'bool', 20 => 'uint64', 130 => 'string'];
 
 		foreach($this->data as $row){
 			$item = $sxe->addChild('item');
 
-			foreach(\array_values($row) as $i => $value){
+			foreach(array_values($row) as $i => $value){
 				$item
 					->addChild($this->cols[$i]['name'], $value)
-					->addAttribute('dataType', $types[$this->cols[$i]['header']['DataType']]);
+					->addAttribute('dataType', $types[$this->cols[$i]['header']['DataType']])
 				;
 			}
 		}
@@ -304,8 +309,9 @@ abstract class ReaderAbstract implements ReaderInterface, LoggerAwareInterface{
 
 		$createTable->query();
 
-		if(\count($this->data) < 1){
+		if(count($this->data) < 1){
 			$this->logger->notice('no records available for table '.$this->name);
+
 			return $this;
 		}
 

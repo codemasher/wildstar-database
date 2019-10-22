@@ -13,15 +13,12 @@ use codemasher\WildstarDB\DTBLReader;
 use DirectoryIterator, Throwable;
 
 /** @var \chillerlan\Database\Database $db */
-$db = null;
-
 /** @var \Psr\Log\LoggerInterface $logger */
-$logger = null;
 
 require_once __DIR__.'/common.php';
 
 $reader   = new DTBLReader($logger);
-$iterator = new DirectoryIterator(__DIR__.'/tbl');
+$iterator = new DirectoryIterator('/wildstar/Patch/ClientData/DB');
 
 foreach($iterator as $finfo){
 
@@ -35,8 +32,11 @@ foreach($iterator as $finfo){
 	}
 
 	try{
-		$reader->read($finfo->getRealPath());
-		$reader->toDB($db);
+		$reader
+			->read($finfo->getRealPath())
+			->toDB($db)
+#			->toJSON($finfo->getFilename().'.json')
+		;
 
 		$logger->info('success: '.$reader->name.', '.$finfo->getFilename());
 	}

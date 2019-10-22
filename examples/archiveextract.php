@@ -11,23 +11,23 @@ namespace codemasher\WildstarDBExamples;
 
 use codemasher\WildstarDB\ArchiveExtractor;
 
-/** @var \chillerlan\Database\Database $db */
-$db = null;
-
 /** @var \Psr\Log\LoggerInterface $logger */
-$logger = null;
 
 require_once __DIR__.'/common.php';
 
 $extractor = new ArchiveExtractor($logger);
 
 foreach(ArchiveExtractor::ARCHIVES as $archive){
-	$extractor->open('./WildStar/Patch/'.$archive.'.index');
-	$extractor->extract();
+
+	$extractor
+		->open('/wildstar/Patch/'.$archive.'.index')
+		->extract('/vagrant/WildStar')
+	;
 
 	foreach($extractor->warnings as $file){
 		// handle warnings if necessary
 		$logger->info('a warning occured for: '.$file->Parent.$file->Name);
 	}
+
 }
 

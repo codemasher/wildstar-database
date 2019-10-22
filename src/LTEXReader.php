@@ -2,7 +2,7 @@
 /**
  * Class LTEXReader
  *
- * @link https://arctium.io/wiki/index.php?title=Locale_Lookup_Index_(.bin)
+ * @link         https://arctium.io/wiki/index.php?title=Locale_Lookup_Index_(.bin)
  *
  * @filesource   LTEXReader.php
  * @created      05.01.2019
@@ -13,6 +13,8 @@
  */
 
 namespace codemasher\WildstarDB;
+
+use function array_fill, fread, fseek, ftell, unpack;
 
 /**
  * @property string $prettyname
@@ -51,9 +53,9 @@ class LTEXReader extends ReaderAbstract{
 			throw new WSDBException('invalid LTEX');
 		}
 
-		\fseek($this->fh, $this->headerSize + $this->header['LongNameStringPtr']);
+		fseek($this->fh, $this->headerSize + $this->header['LongNameStringPtr']);
 
-		$this->prettyname = $this->decodeString(\fread($this->fh, $this->header['LongNameStringLength'] * 2));
+		$this->prettyname = $this->decodeString(fread($this->fh, $this->header['LongNameStringLength'] * 2));
 		$this->name       = 'LocalizedText_'.$this::LCID[$this->header['LCID']];
 		$this->cols       = [
 			['name' => 'ID',            'header' => ['DataType' =>   3]],
@@ -71,23 +73,23 @@ class LTEXReader extends ReaderAbstract{
 	 * @return void
 	 */
 	protected function readData():void{
-		\fseek($this->fh, $this->headerSize + $this->header['EntryIndexPtr']);
+		fseek($this->fh, $this->headerSize + $this->header['EntryIndexPtr']);
 
 		$this->data = array_fill(0, $this->header['EntryCount'], null);
 
 		foreach($this->data as $i => $_){
 			// get the id and offset for the data block
-			$c = \unpack('Lid/Loffset', \fread($this->fh, 8));
+			$c = unpack('Lid/Loffset', fread($this->fh, 8));
 			// save the current position
-			$p = \ftell($this->fh);
+			$p = ftell($this->fh);
 
 			// seek forward to the data block
-			\fseek($this->fh, $this->headerSize + $this->header['NameStorePtr'] + $c['offset'] * 2);
+			fseek($this->fh, $this->headerSize + $this->header['NameStorePtr'] + $c['offset'] * 2);
 
 			$v = '';
 			// read until we hit a double nul or the void
 			do{
-				$s = \fread($this->fh, 2);
+				$s = fread($this->fh, 2);
 				$v .= $s;
 			}
 			while($s !== "\x00\x00" && $s !== '');
@@ -95,7 +97,7 @@ class LTEXReader extends ReaderAbstract{
 			$this->data[$i] = ['ID' => $c['id'], 'LocalizedText' => $this->decodeString($v)];
 
 			// restore the previous position
-			\fseek($this->fh, $p);
+			fseek($this->fh, $p);
 		}
 
 	}

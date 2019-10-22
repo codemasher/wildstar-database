@@ -9,6 +9,8 @@
 
 namespace codemasher\WildstarDB;
 
+use function is_array, is_float, is_int, pack, unpack;
+
 const WSDB_FUNCTIONS = true;
 
 // http://php.net/manual/en/function.pack.php#119402
@@ -31,9 +33,9 @@ function uint32($i, bool $endianness = null){
 		$f = 'L';
 	}
 
-	$i = \is_int($i) ? \pack($f, $i) : \unpack($f, $i);
+	$i = is_int($i) ? pack($f, $i) : unpack($f, $i);
 
-	return \is_array($i) ? $i[1] : $i;
+	return is_array($i) ? $i[1] : $i;
 }
 
 /**
@@ -54,9 +56,9 @@ function uint64($i, bool $endianness = null){
 		$f = 'Q';
 	}
 
-	$i = \is_int($i) ? \pack($f, $i) : \unpack($f, $i);
+	$i = is_int($i) ? pack($f, $i) : unpack($f, $i);
 
-	return \is_array($i) ? $i[1] : $i;
+	return is_array($i) ? $i[1] : $i;
 }
 
 /**
@@ -77,7 +79,7 @@ function float($i, bool $endianness = null){
 		$f = 'f';
 	}
 
-	$i = (\is_float($i) || \is_int($i)) ? \pack($f, $i) : \unpack($f, $i);
+	$i = (is_float($i) || is_int($i)) ? pack($f, $i) : unpack($f, $i);
 
-	return \is_array($i) ? $i[1] : $i;
+	return is_array($i) ? $i[1] : $i;
 }

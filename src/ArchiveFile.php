@@ -12,6 +12,8 @@
 
 namespace codemasher\WildstarDB;
 
+use function bin2hex;
+
 class ArchiveFile extends ArchiveItemAbstract{
 
 	public $Flags;
@@ -24,8 +26,8 @@ class ArchiveFile extends ArchiveItemAbstract{
 	public function __construct(array $data, string $parent){
 		parent::__construct($data, $parent);
 
-		$this->Hash      = \bin2hex($this->Hash);
-		$this->FileUtime = (int)($this->Filetime/100000000);
+		$this->Hash      = bin2hex($this->Hash);
+		$this->FileUtime = (int)($this->Filetime / 100000000);
 #		$dt = (new \DateTime)->createFromFormat('U.u', $this->FileUtime) ?: (new \DateTime)->createFromFormat('U', $this->FileUtime);
 #		$this->FileTimeStr = $dt->format(\DateTimeInterface::RFC3339_EXTENDED);
 	}

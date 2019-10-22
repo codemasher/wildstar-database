@@ -13,29 +13,27 @@ use codemasher\WildstarDB\LTEXReader;
 use Throwable;
 
 /** @var \chillerlan\Database\Database $db */
-$db = null;
-
 /** @var \Psr\Log\LoggerInterface $logger */
-$logger = null;
 
 require_once __DIR__.'/common.php';
 
 $reader = new LTEXReader($logger);
 
-#$reader->read(__DIR__.'/en-US.bin')->toJSON(__DIR__.'/en.json', JSON_PRETTY_PRINT);
-#$reader->read(__DIR__.'/de-DE.bin')->toCSV(__DIR__.'/de.csv', '|', '`');
-
-foreach(['de-DE', 'en-US', 'fr-FR'] as $lang){
-	$file  = __DIR__.'/'.$lang.'.bin';
+foreach(['DE' => 'de-DE', 'EN' => 'en-US', 'FR' => 'fr-FR'] as $dir => $lang){
+	$file  = '/wildstar/Patch/ClientData'.$dir.'/'.$lang.'.bin';
 	$table = 'LocalizedText_'.$lang;
 
 	try{
 		$db->drop->table($table)->ifExists()->query();
 
-		$reader->read($file);
-		$reader->toDB($db);
+		$reader->read($file)
+			->toDB($db)
+#			->toJSON(__DIR__.'/'.$lang.'.json', JSON_PRETTY_PRINT)
+#			->toCSV(__DIR__.'/'.$lang.'.csv', '|', '`')
+		;
 
 		// defrag & optimize table
+		/** @noinspection SqlResolve */
 		$db->raw('ALTER TABLE `'.$table.'` ENGINE=InnoDB');
 		$db->raw('OPTIMIZE TABLE `'.$table.'`');
 

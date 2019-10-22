@@ -14,27 +14,31 @@ use chillerlan\DotEnv\DotEnv;
 use chillerlan\SimpleCache\MemoryCache;
 use Psr\Log\AbstractLogger;
 
-\mb_internal_encoding('UTF-8');
+use function date, mb_internal_encoding, sprintf, substr, trim;
 
-require_once __DIR__.'/../vendor/autoload.php';
+mb_internal_encoding('UTF-8');
 
-$env = (new DotEnv(__DIR__.'/../config', '.env', false))->load();
+require_once '/vagrant/vendor/autoload.php';
+
+$env = (new DotEnv('/vagrant/config', '.env', false))->load();
 
 $o = [
 	// DatabaseOptions
-	'driver'      => MySQLiDrv::class,
-	'host'        => $env->DB_HOST,
-	'port'        => $env->DB_PORT,
-	'socket'      => $env->DB_SOCKET,
-	'database'    => $env->DB_DATABASE,
-	'username'    => $env->DB_USERNAME,
-	'password'    => $env->DB_PASSWORD,
+	'driver'   => MySQLiDrv::class,
+	'host'     => $env->DB_HOST,
+	'port'     => $env->DB_PORT,
+	'socket'   => $env->DB_SOCKET,
+	'database' => $env->DB_DATABASE,
+	'username' => $env->DB_USERNAME,
+	'password' => $env->DB_PASSWORD,
 ];
 
 $logger = new class() extends AbstractLogger{
+
 	public function log($level, $message, array $context = []){
-		echo \sprintf('[%s][%s] %s', \date('Y-m-d H:i:s'), \substr($level, 0, 4), \trim($message))."\n";
+		echo sprintf('[%s][%s] %s', date('Y-m-d H:i:s'), substr($level, 0, 4), trim($message))."\n";
 	}
+
 };
 
 $db = new Database(new DatabaseOptions($o), new MemoryCache, $logger);

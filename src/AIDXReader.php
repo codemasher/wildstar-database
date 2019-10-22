@@ -2,7 +2,7 @@
 /**
  * Class AIDXReader
  *
- * @link https://github.com/Narthorn/Halon/blob/master/halon.py
+ * @link         https://github.com/Narthorn/Halon/blob/master/halon.py
  *
  * @filesource   AIDXReader.php
  * @created      06.01.2019
@@ -14,24 +14,26 @@
 
 namespace codemasher\WildstarDB;
 
+use function array_fill, array_merge, fread, fseek, ftell, strpos, substr, unpack;
+
 /**
  * @property array $dirs
  */
 class AIDXReader extends PACKReaderAbstract{
 
+	protected const AIDX_ROOT = 'a4ArchiveType/LVersion/LBuildnumber/LIndex';
+	protected const AIDX_DATA = 'LNameOffset/LFlags/QFiletime/QSizeUncompressed/QSizeCompressed/a20Hash/x4';
+
 	/** @var array */
 	protected $dirs;
 
 	/**
-	 * @throws \codemasher\WildstarDB\WSDBException
+	 * @inheritDoc
 	 */
 	protected function readData():void{
 
 		// get the root info block of the AIDX file (4+4+4+4 = 16 bytes)
-		$rootInfo = \unpack(
-			'a4ArchiveType/LVersion/LBuildnumber/LIndex',
-			\fread($this->fh, 16)
-		);
+		$rootInfo = unpack($this::AIDX_ROOT, fread($this->fh, 16));
 
 		if($rootInfo['ArchiveType'] !== "\x58\x44\x49\x41"){ // XDIA
 			throw new WSDBException('invalid AIDX');
@@ -53,32 +55,29 @@ class AIDXReader extends PACKReaderAbstract{
 		$this->dirs[] = $parent;
 
 		// find the info block
-		\fseek($this->fh, $blockInfo['Offset']);
+		fseek($this->fh, $blockInfo['Offset']);
 
 		// get the count of directories and files in that block (4+4 = 8 bytes)
-		$n = \unpack('Ldirs/Lfiles', \fread($this->fh, 8));
+		$n = unpack('Ldirs/Lfiles', fread($this->fh, 8));
 
-		$dirs  = \array_fill(0, $n['dirs'], null);
-		$files = \array_fill(0, $n['files'], null);
+		$dirs  = array_fill(0, $n['dirs'], null);
+		$files = array_fill(0, $n['files'], null);
 
 		// create a directory object for each dir (4+4 = 8 bytes)
 		foreach($dirs as $i => $_){
-			$dirs[$i] = new ArchiveDirectory(\unpack('LNameOffset/LBlockIndex', \fread($this->fh, 8)), $parent);
+			$dirs[$i] = new ArchiveDirectory(unpack('LNameOffset/LBlockIndex', fread($this->fh, 8)), $parent);
 		}
 
 		// create a file object for each file (4+4+8+8+8+20+4 = 56 bytes)
 		foreach($files as $i => $_){
-			$files[$i] = new ArchiveFile(
-				\unpack('LNameOffset/LFlags/QFiletime/QSizeUncompressed/QSizeCompressed/a20Hash/x4', \fread($this->fh, 56)),
-				$parent
-			);
+			$files[$i] = new ArchiveFile(unpack($this::AIDX_DATA, fread($this->fh, 56)), $parent);
 		}
 
 		// read the list of names from the remaining data
-		$names = \fread($this->fh, $blockInfo['Size'] - (\ftell($this->fh) - $blockInfo['Offset']));
+		$names = fread($this->fh, $blockInfo['Size'] - (ftell($this->fh) - $blockInfo['Offset']));
 
 		$getname = function(ArchiveItemAbstract $e) use ($names){
-			return '/'.\substr($names, $e->NameOffset, \strpos($names, "\x00", $e->NameOffset) - $e->NameOffset);
+			return '/'.substr($names, $e->NameOffset, strpos($names, "\x00", $e->NameOffset) - $e->NameOffset);
 		};
 
 		// apply the names to each object in the block
@@ -97,7 +96,7 @@ class AIDXReader extends PACKReaderAbstract{
 			}
 		}
 
-		return \array_merge($dirs, $files);
+		return array_merge($dirs, $files);
 	}
 
 }
