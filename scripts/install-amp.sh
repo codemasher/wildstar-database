@@ -99,7 +99,7 @@ printf "\nPATH=\"$(sudo su - vagrant -c 'composer config -g home 2>/dev/null')/v
 composer about
 
 # Install global PHPUnit
-wget https://phar.phpunit.de/phpunit.phar
+wget -q https://phar.phpunit.de/phpunit.phar
 chmod +x phpunit.phar
 mv phpunit.phar /usr/local/bin/phpunit
 phpunit --version
@@ -139,8 +139,8 @@ sudo service mysql restart
 ln -s /var/lib/mysql/mysql.sock /tmp/mysql.sock
 
 # PHPMyAdmin
-wget https://files.phpmyadmin.net/phpMyAdmin/4.9.1/phpMyAdmin-4.9.1-all-languages.tar.gz
-tar -xzvf phpMyAdmin-4.9.1-all-languages.tar.gz -C /usr/share/
+wget -q https://files.phpmyadmin.net/phpMyAdmin/4.9.1/phpMyAdmin-4.9.1-all-languages.tar.gz
+tar -xzf phpMyAdmin-4.9.1-all-languages.tar.gz -C /usr/share/
 mv /usr/share/phpMyAdmin-4.9.1-all-languages /usr/share/phpmyadmin
 cd /usr/share/phpmyadmin/ && composer install --no-dev --no-interaction --prefer-dist
 cd /home/vagrant && rm phpMyAdmin-4.9.1-all-languages.tar.gz
