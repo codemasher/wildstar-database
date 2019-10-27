@@ -4,3 +4,7 @@ composer.lock
 config/.env
 .vagrant
 ubuntu-bionic-18.04-cloudimg-console.log
+
+Wildstar
+cli/maps/*.png
+public/tiles/*.png

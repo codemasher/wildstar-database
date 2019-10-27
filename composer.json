@@ -15,17 +15,21 @@
 	],
 	"require": {
 		"php": "^7.2",
+		"ext-fileinfo": "*",
+		"ext-gd": "*",
+		"ext-imagick": "*",
 		"ext-json": "*",
+		"ext-libxml": "*",
 		"ext-mbstring": "*",
 		"ext-simplexml": "*",
-		"ext-libxml": "*",
 		"ext-zlib": "*",
 		"psr/log": "^1.1",
 		"chillerlan/php-database": "^3.1"
 	},
 	"require-dev": {
+		"chillerlan/php-cache": "^3.0",
 		"chillerlan/php-dotenv": "^1.0",
-		"chillerlan/php-cache": "^3.0"
+		"chillerlan/php-imagetiler": "^2.0"
 	},
 	"autoload": {
 		"files": [
@@ -38,7 +42,8 @@
 	"autoload-dev": {
 		"psr-4": {
 			"codemasher\\WildstarDBTest\\": "tests/",
-			"codemasher\\WildstarDBExamples\\": "examples/"
+			"codemasher\\WildstarDBExamples\\": "examples/",
+			"codemasher\\WildstarDBCLI\\": "cli/"
 		}
 	}
 }
