@@ -20,6 +20,8 @@ require_once __DIR__.'/common.php';
  * @var string $wildstar_path
  */
 
+$db->connect();
+
 $reader = new LTEXReader($logger);
 
 foreach(['DE' => 'de-DE', 'EN' => 'en-US', 'FR' => 'fr-FR'] as $dir => $lang){

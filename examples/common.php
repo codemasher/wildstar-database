@@ -44,7 +44,3 @@ $logger = new class() extends AbstractLogger{
 };
 
 $db = new Database(new DatabaseOptions($o), new MemoryCache, $logger);
-
-$db->connect();
-
-

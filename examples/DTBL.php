@@ -20,6 +20,8 @@ require_once __DIR__.'/common.php';
  * @var string $wildstar_path
  */
 
+$db->connect();
+
 $reader   = new DTBLReader($logger);
 $iterator = new DirectoryIterator($wildstar_path.'/Patch/ClientData/DB');
 
