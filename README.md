@@ -13,3 +13,17 @@
 [scrutinizer]: https://scrutinizer-ci.com/g/codemasher/wildstar-database
 [donate-badge]: https://img.shields.io/badge/donate-paypal-ff33aa.svg?style=flat-square
 [donate]: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=WLYUNAT9ZTJZ4
+
+# Requirements 
+(if not running Vagrant)
+- the WildStar game client (non-Steam)
+- PHP 7.2+
+  - the [XZ (LZMA2) extension](https://github.com/codemasher/php-ext-xz) if you want to extract the game files (currently linux/Vagrant only)
+- a MySQL or Postgres database
+
+## Running the Vagrant box
+### Requirements:
+- [Vagrant](https://www.vagrantup.com/downloads.html) (v2.2.x+)
+  - the [bionic64 box](https://app.vagrantup.com/ubuntu/boxes/bionic64)
+  - [vagrant-reload](https://github.com/aidanns/vagrant-reload)
+  - [vagrant-landrush](https://github.com/vagrant-landrush/landrush)
