@@ -3,8 +3,8 @@ vendor
 composer.lock
 config/.env
 .vagrant
-ubuntu-bionic-18.04-cloudimg-console.log
-
-Wildstar
+ubuntu-*.log
+WildStar
 cli/maps/*.png
-public/tiles/*.png
+public/tiles
+NexusForever
