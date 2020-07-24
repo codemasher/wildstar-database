@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 echo "upgrading $BOX_NAME"
 
-# Update Package List
+echo "Update Package List"
 sudo apt-get update
 
-# Install Kernel Headers
-sudo apt-get install -y -qq linux-headers-$(uname -r) build-essential software-properties-common
+echo "Install Kernel Headers"
+sudo apt-get install -y -qq linux-headers-$(uname -r) build-essential software-properties-common apt-transport-https
 
-# Upgrade System Packages
+echo "Upgrade System Packages"
 sudo apt-get upgrade -y

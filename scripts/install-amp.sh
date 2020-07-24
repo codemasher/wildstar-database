@@ -4,16 +4,22 @@
 # Base install #
 ################
 
-# Update Package List
+# MS .net core
+wget -q https://packages.microsoft.com/config/ubuntu/16.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
+sudo dpkg -i packages-microsoft-prod.deb
+sudo add-apt-repository universe
+
+echo "Update Package List"
 sudo apt-get update
 
-# Update System Packages
+echo "Update System Packages"
 sudo apt-get upgrade -y
 
-# Install Some Basic Packages
-sudo apt-get install -y -qq curl dos2unix gcc git libmcrypt4 libpcre3-dev ntp unzip make \
+echo "Install Some Basic Packages"
+sudo apt-get install -y curl dos2unix gcc git libmcrypt4 libpcre3-dev ntp unzip make \
 python3.7-dev python-pip re2c supervisor unattended-upgrades whois libnotify-bin pv \
-cifs-utils vim gnupg ca-certificates util-linux libc-dev g++ autoconf sqlite3 libsqlite3-dev
+cifs-utils vim gnupg ca-certificates util-linux libc-dev g++ autoconf sqlite3 libsqlite3-dev \
+dotnet-sdk-3.1
 
 # Set Locale
 #sudo update-locale "de_DE.UTF-8"
@@ -45,12 +51,12 @@ sudo apt-get update
 # Apache & PHP
 # --allow-downgrades --allow-remove-essential --allow-change-held-packages
 sudo apt-get install -y -qq \
-apache2 libapache2-mod-php7.3 php7.3-common \
-php7.3-cli php7.3-bcmath php7.3-bz2 php7.3-curl php7.3-dev php7.3-enchant \
-php7.3-gd php7.3-gmp php7.3-imap php7.3-intl php7.3-json php7.3-mbstring \
-php7.3-odbc php7.3-opcache php7.3-phpdbg php7.3-pspell php7.3-readline \
-php7.3-soap php7.3-xml php7.3-zip php7.3-memcached php7.3-mysql \
-php7.3-pgsql php7.3-interbase php7.3-sqlite3 php7.3-imagick \
+apache2 libapache2-mod-php7.4 php7.4-common \
+php7.4-cli php7.4-bcmath php7.4-bz2 php7.4-curl php7.4-dev php7.4-enchant \
+php7.4-gd php7.4-gmp php7.4-imap php7.4-intl php7.4-json php7.4-mbstring \
+php7.4-opcache php7.4-phpdbg php7.4-pspell php7.4-readline \
+php7.4-soap php7.4-xml php7.4-zip php7.4-memcached \
+php7.4-mysql php7.4-sqlite3 php7.4-imagick \
 php-xdebug php-pear redis-server memcached imagemagick liblzma-dev
 #mono-complete libapache2-mod-mono mod-mono-server mono-xsp4 referenceassemblies-pcl
 
@@ -58,38 +64,38 @@ sudo systemctl stop apache2
 sudo pecl channel-update pecl.php.net
 
 # PHP-Apache2/FPM Options
-sudo sed -i "s/error_reporting = .*/error_reporting = E_ALL/" /etc/php/7.3/apache2/php.ini
-sudo sed -i "s/display_errors = .*/display_errors = On/" /etc/php/7.3/apache2/php.ini
-sudo sed -i "s/memory_limit = .*/memory_limit = 2G/" /etc/php/7.3/apache2/php.ini
-sudo sed -i "s/;date.timezone.*/date.timezone = UTC/" /etc/php/7.3/apache2/php.ini
-sudo sed -i "s/upload_max_filesize = .*/upload_max_filesize = 128M/" /etc/php/7.3/apache2/php.ini
-sudo sed -i "s/post_max_size = .*/post_max_size = 128M/" /etc/php/7.3/apache2/php.ini
+sudo sed -i "s/error_reporting = .*/error_reporting = E_ALL/" /etc/php/7.4/apache2/php.ini
+sudo sed -i "s/display_errors = .*/display_errors = On/" /etc/php/7.4/apache2/php.ini
+sudo sed -i "s/memory_limit = .*/memory_limit = 2G/" /etc/php/7.4/apache2/php.ini
+sudo sed -i "s/;date.timezone.*/date.timezone = UTC/" /etc/php/7.4/apache2/php.ini
+sudo sed -i "s/upload_max_filesize = .*/upload_max_filesize = 128M/" /etc/php/7.4/apache2/php.ini
+sudo sed -i "s/post_max_size = .*/post_max_size = 128M/" /etc/php/7.4/apache2/php.ini
 
 # PHP CLI Settings
-sudo sed -i "s/error_reporting = .*/error_reporting = E_ALL/" /etc/php/7.3/cli/php.ini
-sudo sed -i "s/display_errors = .*/display_errors = On/" /etc/php/7.3/cli/php.ini
-sudo sed -i "s/memory_limit = .*/memory_limit = 8G/" /etc/php/7.3/cli/php.ini
-sudo sed -i "s/;date.timezone.*/date.timezone = UTC/" /etc/php/7.3/cli/php.ini
+sudo sed -i "s/error_reporting = .*/error_reporting = E_ALL/" /etc/php/7.4/cli/php.ini
+sudo sed -i "s/display_errors = .*/display_errors = On/" /etc/php/7.4/cli/php.ini
+sudo sed -i "s/memory_limit = .*/memory_limit = 8G/" /etc/php/7.4/cli/php.ini
+sudo sed -i "s/;date.timezone.*/date.timezone = UTC/" /etc/php/7.4/cli/php.ini
 
-sudo echo "xdebug.remote_enable = 1" >> /etc/php/7.3/mods-available/xdebug.ini
-sudo echo "xdebug.remote_connect_back = 1" >> /etc/php/7.3/mods-available/xdebug.ini
-sudo echo "xdebug.remote_port = 9000" >> /etc/php/7.3/mods-available/xdebug.ini
-sudo echo "xdebug.max_nesting_level = 512" >> /etc/php/7.3/mods-available/xdebug.ini
-sudo echo "opcache.revalidate_freq = 0" >> /etc/php/7.3/mods-available/opcache.ini
+sudo echo "xdebug.remote_enable = 1" >> /etc/php/7.4/mods-available/xdebug.ini
+sudo echo "xdebug.remote_connect_back = 1" >> /etc/php/7.4/mods-available/xdebug.ini
+sudo echo "xdebug.remote_port = 9000" >> /etc/php/7.4/mods-available/xdebug.ini
+sudo echo "xdebug.max_nesting_level = 512" >> /etc/php/7.4/mods-available/xdebug.ini
+sudo echo "opcache.revalidate_freq = 0" >> /etc/php/7.4/mods-available/opcache.ini
 
 # PHPRedis
 sudo pecl install redis
-sudo echo "extension=redis" > /etc/php/7.3/mods-available/redis.ini
+sudo echo "extension=redis" > /etc/php/7.4/mods-available/redis.ini
 
 # APCU
-sudo pecl install apcu
-sudo printf "extension=apcu\napc.enable=1\napc.enable_cli=1" > /etc/php/7.3/mods-available/apcu.ini
+#sudo pecl install apcu
+#sudo printf "extension=apcu\napc.enable=1\napc.enable_cli=1" > /etc/php/7.4/mods-available/apcu.ini
 
 # xz (LZMA2)
-mkdir /usr/share/xz/
-git clone https://github.com/codemasher/php-xz.git /usr/share/xz/
+mkdir /usr/share/xz
+git clone https://github.com/codemasher/php-xz.git /usr/share/xz
 cd /usr/share/xz/ && phpize && ./configure && make && make install
-sudo echo "extension=xz" > /etc/php/7.3/mods-available/xz.ini
+sudo echo "extension=xz" > /etc/php/7.4/mods-available/xz.ini
 
 # install global composer
 curl -sS https://getcomposer.org/installer | php
@@ -99,10 +105,10 @@ printf "\nPATH=\"$(sudo su - vagrant -c 'composer config -g home 2>/dev/null')/v
 composer about
 
 # Install global PHPUnit
-wget -q https://phar.phpunit.de/phpunit.phar
-chmod +x phpunit.phar
-mv phpunit.phar /usr/local/bin/phpunit
-phpunit --version
+#wget -q https://phar.phpunit.de/phpunit.phar
+#chmod +x phpunit.phar
+#mv phpunit.phar /usr/local/bin/phpunit
+#phpunit --version
 
 # Apache config
 sudo cp /vagrant/config/defaultsite.conf /etc/apache2/sites-available/vagrant.conf
@@ -139,11 +145,14 @@ sudo service mysql restart
 ln -s /var/lib/mysql/mysql.sock /tmp/mysql.sock
 
 # PHPMyAdmin
-wget -q https://files.phpmyadmin.net/phpMyAdmin/4.9.1/phpMyAdmin-4.9.1-all-languages.tar.gz
-tar -xzf phpMyAdmin-4.9.1-all-languages.tar.gz -C /usr/share/
-mv /usr/share/phpMyAdmin-4.9.1-all-languages /usr/share/phpmyadmin
-cd /usr/share/phpmyadmin/ && composer install --no-dev --no-interaction --prefer-dist
-cd /home/vagrant && rm phpMyAdmin-4.9.1-all-languages.tar.gz
+cd /home/vagrant
+wget -q https://files.phpmyadmin.net/phpMyAdmin/5.0.2/phpMyAdmin-5.0.2-all-languages.tar.gz
+tar -xzf phpMyAdmin-5.0.2-all-languages.tar.gz -C /usr/share
+mv /usr/share/phpMyAdmin-5.0.2-all-languages /usr/share/phpmyadmin
+cd /usr/share/phpmyadmin
+composer install --no-dev --no-interaction --prefer-dist
+cd /home/vagrant
+rm phpMyAdmin-5.0.2-all-languages.tar.gz
 
 cp /vagrant/config/phpmyadmin.config.php /usr/share/phpmyadmin/config.inc.php
 
@@ -153,8 +162,6 @@ sudo systemctl reload apache2
 ########
 # Misc #
 ########
-
-echo "misc setup"
 
 # Configure Supervisor
 systemctl enable supervisor.service
@@ -170,7 +177,8 @@ apt-get -y clean
 /sbin/swapon /var/swap.1
 
 # Minimize The Disk Image
-echo "Minimizing disk image..."
-dd if=/dev/zero of=/EMPTY bs=1M
-rm -f /EMPTY
-sync
+#echo "Minimizing disk image..."
+#dd if=/dev/zero of=/EMPTY bs=1M
+#rm -f /EMPTY
+#sync
+echo "done."

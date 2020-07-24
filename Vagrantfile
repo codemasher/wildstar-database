@@ -20,15 +20,15 @@ Vagrant.configure(2) do |config|
     config.vm.provider :virtualbox do |vb|
         vb.name = VIRTUALBOX_DISPLAY_NAME
 
+		# modify CPUs & memory if needed
         vb.customize ["modifyvm", :id, "--cpus", "4"]
         vb.customize ['modifyvm', :id, '--memory', '16384']
         vb.customize ['modifyvm', :id, '--natdnsproxy1', 'on']
         vb.customize ['modifyvm', :id, '--natdnshostresolver1', 'on']
         vb.customize ["modifyvm", :id, "--ostype", "Ubuntu_64"]
-
+        vb.customize ["modifyvm", :id, "--clipboard", "bidirectional"]
         # Display the VirtualBox GUI when booting the machine
         vb.gui = true
-        vb.customize ["modifyvm", :id, "--clipboard", "bidirectional"]
     end
 
     config.vm.synced_folder './', '/vagrant', id: 'vagrant-root', :owner => 'www-data', :group => 'www-data', :mount_options => ["dmode=777","fmode=777"]
@@ -36,14 +36,11 @@ Vagrant.configure(2) do |config|
     config.vm.network "private_network", ip: "192.168.10.10"
     config.vm.network 'forwarded_port', guest: 80, host: 8000, auto_correct: true
     config.vm.network 'forwarded_port', guest: 443, host: 44300, auto_correct: true
-    config.vm.network 'forwarded_port', guest: 1433, host: 14330, auto_correct: true
-    config.vm.network 'forwarded_port', guest: 3050, host: 30500, auto_correct: true
     config.vm.network 'forwarded_port', guest: 3306, host: 33060, auto_correct: true
-    config.vm.network 'forwarded_port', guest: 5432, host: 54320, auto_correct: true
 
-    config.landrush.enabled = true
-    config.landrush.tld = 'db'
-    config.landrush.host 'wildstar.db'
+#    config.landrush.enabled = true
+#    config.landrush.tld = 'db'
+#    config.landrush.host 'wildstar.db'
 
     config.vm.provision :shell, inline: 'sudo echo "source /vagrant/scripts/provision-envvars.sh" > /etc/profile.d/env-config.sh', :run => 'always'
     config.vm.provision :shell, inline: 'sudo sudo apt-get update'
