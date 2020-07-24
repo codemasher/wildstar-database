@@ -19,7 +19,9 @@
 - the WildStar game client (non-Steam)
 - PHP 7.2+
   - the [XZ (LZMA2) extension](https://github.com/codemasher/php-ext-xz) if you want to extract the game files (currently linux/Vagrant only)
+  - the [Imagick](https://github.com/Imagick/imagick) extension and [imagemagick](https://imagemagick.org/) running on the host if you want to create map tiles
 - a MySQL or Postgres database
+- [Wildstar Studio](https://bitbucket.org/mugadr_m/wildstar-studio/downloads/)
 
 ## Running the Vagrant box
 ### Requirements:
