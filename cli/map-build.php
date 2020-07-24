@@ -14,7 +14,7 @@ namespace codemasher\WildstarDBCLI;
 
 use DirectoryIterator, Imagick;
 
-use function explode, hexdec, in_array, min, str_split;
+use function explode, hexdec, in_array, min, sprintf, str_split;
 
 require_once __DIR__.'/common-cli.php';
 
@@ -24,6 +24,7 @@ require_once __DIR__.'/common-cli.php';
  */
 
 $include_maps = [
+	'AdventureAstrovoidPrison',
 	'AdventureGaleras',
 	'AdventureHycrest',
 	'AdventureLevianBay',
@@ -31,21 +32,64 @@ $include_maps = [
 	'AdventureNorthernWilds',
 	'AdventureWhitevale',
 	'Arcterra',
+	'AugmentorsRaid',
+	'BattlegroundHallsoftheBloodsworn',
+	'ColdbloodCitadel',
+	'CommunityHousing',
+	'Datascape', // careful, huge!
+	'DominionArkShipTutorial',
 	'DruseraInstance4',
+	'DruseraMicroInstance1',
+	'DruseraMicroInstance2',
+	'DruseraMicroInstance3',
 	'Eastern',
+	'EthnDunon',
+	'ExcavationSabotage',
+	'ExileArkShipTutorial',
 	'Farsidesque',
+	'GeneticArchives',
+	'GrimvaultCore',
 	'HalloftheHundred',
+	'HalonRingNew',
+	'HousingAlgorocSky', // careful, huge!
+	'InfiniteLabs',
+	'KevinHTLFort',
+	'KevinVortexQuarry',
+	'MordechaiReturns',
 	'NewCentral',
+	'NewPlayerExperience',
 	'OsunDungeon',
+	'PCPLevianBay',
+	'PocketCaps',
+	'ProtostarWinterfest',
+	'PvPArena',
+	'PvPArena2',
+	'RedMoonTerror',
 	'ShadesEveInstance',
+	'ShiphandAsteroidMining', // careful, huge!
+	'ShiphandDeepSpaceDisappearance',
+	'ShiphandGauntlet',
+	'ShiphandHungerFromtheVoid',
+	'ShiphandInfestation',
+	'ShiphandLevel6',
+	'ShiphandRageLogic',
+	'ShiphandSpaceMadness',
 	'Skullcano',
 	'TorineDungeon',
+	'UltimateProtogamesJuniors',
+	'WarplotSkyMap',
+	'WarplotsMap',
 	'Western',
+	'WorldStory00',
+	'WorldStory01',
+	'HousingDeraduneSky',
+	'HousingAlgorocSky',
+	'HousingAlgorocSolo',
 ];
 
 $outpath = __DIR__.'/maps';
 
-foreach(new DirectoryIterator($wildstar_path.'/Patch/ClientData/Map') as $dir){
+foreach(new DirectoryIterator($wildstar_path.'/Patch/ClientData/Map') as $dir){ // 'C:\\Games\\Wildstar Studio\\out\\Map'
 	$map = $dir->getFilename();
 
 	if(!$dir->isDir() || $dir->isDot() || (!empty($include_maps) && !in_array($map, $include_maps))){
@@ -76,6 +120,12 @@ foreach(new DirectoryIterator($wildstar_path.'/Patch/ClientData/Map') as $dir){
 			|| ($map === 'MordechaiReturns' && $y < 6)
 			|| (in_array($map, ['Western', 'AdventureLevianBay']) && ($x > 74 || $y < 46 || $y > 74))
 			|| ($map === 'HalonRingNew' && ($x > 56 || $y > 66))
+			|| ($map === 'GeneticArchives' && ($x < 60 || $x > 74 || $y < 58 || $y > 67))
+			|| ($map === 'ShiphandDeepSpaceDisappearance' && ($x < 59 || $x > 67 || $y < 60 || $y > 67))
+			|| ($map === 'ShiphandLevel6' && ($x < 81 || $x > 84 || $y < 49 || $y > 54))
+			|| ($map === 'ProtostarWinterfest' && ($x < 63 || $x > 66 || $y < 63 || $y > 65))
+			|| ($map === 'PvPArena2' && ($x < 63 || $x > 66 || $y < 64 || $y > 65))
+			|| ($map === 'AdventureAstrovoidPrison' && ($x < 61 || $x > 65 || $y < 61 || $y > 66))
 		){
 			continue;
 		}
@@ -91,6 +141,8 @@ foreach(new DirectoryIterator($wildstar_path.'/Patch/ClientData/Map') as $dir){
 	if(empty($textures)){
 		continue;
 	}
+
+	$logger->info(sprintf('xmin: %s, xmax %s, ymin: %s, ymax: %s', $xmin, $xmax, $ymin, $ymax));
 
 	$im = new Imagick;
 	$im->newImage(($xmax - $xmin + 1) * 512, ($ymax - $ymin + 1) * 512, '#757575');
